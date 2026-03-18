@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Ethiopian Food & Fitness"
+version = "1.0.0"
+id = "artifacts/ethiopian-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+localPort = 19918
+name = "expo"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/ethiopian-app run dev"
+
+[services.env]
+PORT = "19918"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/ethiopian-app", "run", "build"]
+run = ["pnpm", "--filter", "@workspace/ethiopian-app", "run", "serve"]
