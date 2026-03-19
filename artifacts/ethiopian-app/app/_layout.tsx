@@ -5,10 +5,11 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -20,10 +21,17 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
-function RootLayoutNav() {
+function RootLayoutNav({ showWelcome }: { showWelcome: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="welcome"
+        options={{
+          headerShown: false,
+          animation: "fade",
+        }}
+      />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: "fade" }} />
       <Stack.Screen
         name="recipe/[id]"
         options={{ headerShown: false, presentation: "card" }}
@@ -43,14 +51,35 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+    const checkOnboarding = async () => {
+      try {
+        const done = await AsyncStorage.getItem("onboarding_done");
+        setShowWelcome(!done);
+      } catch {
+        setShowWelcome(true);
+      } finally {
+        setOnboardingChecked(true);
+      }
+    };
+    checkOnboarding();
+  }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && onboardingChecked) {
+      SplashScreen.hideAsync();
+      if (showWelcome) {
+        router.replace("/welcome");
+      } else {
+        router.replace("/(tabs)/");
+      }
+    }
+  }, [fontsLoaded, fontError, onboardingChecked, showWelcome]);
+
+  if ((!fontsLoaded && !fontError) || !onboardingChecked) return null;
 
   return (
     <SafeAreaProvider>
@@ -59,7 +88,7 @@ export default function RootLayout() {
           <AppContextProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <KeyboardProvider>
-                <RootLayoutNav />
+                <RootLayoutNav showWelcome={showWelcome} />
               </KeyboardProvider>
             </GestureHandlerRootView>
           </AppContextProvider>
