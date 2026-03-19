@@ -15,53 +15,63 @@ import { useApp } from "@/context/AppContext";
 import { STEP_GOAL, WATER_GOAL_ML } from "@/data/fitness";
 import { useTheme } from "@/hooks/useTheme";
 
-const WATER_QUICK_ADD = [200, 350, 500, 750];
-const STEP_QUICK_ADD = [500, 1000, 2500, 5000];
+const WATER_QUICK = [150, 200, 350, 500];
+const STEPS_QUICK = [500, 1000, 2500, 5000];
 
-function CircularProgress({
-  value, max, size = 110, strokeWidth = 10, color, theme, center,
-}: {
-  value: number; max: number; size?: number; strokeWidth?: number; color: string; theme: any; center: React.ReactNode;
-}) {
-  const pct = Math.min(value / max, 1);
-  const r = (size - strokeWidth * 2) / 2;
+type ActiveTab = "summary" | "water" | "steps" | "bmi";
+
+function ProgressBar({ value, max, color, theme }: { value: number; max: number; color: string; theme: any }) {
+  const pct = Math.min((value / max) * 100, 100);
   return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      <View
-        style={{
-          position: "absolute", width: size, height: size, borderRadius: size / 2,
-          borderWidth: strokeWidth, borderColor: theme.inputBg,
-        }}
-      />
-      {pct > 0 && (
-        <View
-          style={{
-            position: "absolute", width: size, height: size, borderRadius: size / 2,
-            borderWidth: strokeWidth,
-            borderTopColor: pct > 0 ? color : "transparent",
-            borderRightColor: pct > 0.25 ? color : "transparent",
-            borderBottomColor: pct > 0.5 ? color : "transparent",
-            borderLeftColor: pct > 0.75 ? color : "transparent",
-            transform: [{ rotate: "-90deg" }],
-          }}
-        />
-      )}
-      <View style={{ alignItems: "center" }}>{center}</View>
+    <View style={[styles.pBar, { backgroundColor: theme.inputBg }]}>
+      <View style={[styles.pBarFill, { backgroundColor: color, width: `${pct}%` as any }]} />
     </View>
   );
 }
 
-function WeekBar({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
-  const h = max > 0 ? Math.max(4, (value / max) * 60) : 4;
-  const isToday = label === new Date().toLocaleDateString("en-US", { weekday: "short" }).slice(0, 2);
+function WeekChart({ data, max, color, labels }: { data: number[]; max: number; color: string; labels: string[] }) {
+  const todayIdx = new Date().getDay();
   return (
-    <View style={styles.weekBarCol}>
-      <View style={[styles.weekBarBg, { height: 60 }]}>
-        <View style={[styles.weekBarFill, { height: h, backgroundColor: isToday ? color : color + "66" }]} />
+    <View style={styles.chartRow}>
+      {data.map((val, i) => {
+        const h = max > 0 ? Math.max(6, (val / max) * 64) : 6;
+        const isToday = i === todayIdx;
+        return (
+          <View key={i} style={styles.barCol}>
+            <View style={[styles.barBg, { height: 64 }]}>
+              <View style={[styles.barFill, { height: h, backgroundColor: isToday ? color : color + "55" }]} />
+            </View>
+            <Text style={[styles.barLabel, { color: isToday ? color : "#999", fontFamily: isToday ? "Inter_700Bold" : "Inter_400Regular" }]}>
+              {labels[i]}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function SummaryRing({ pct, color, label, value }: { pct: number; color: string; label: string; value: string }) {
+  const capped = Math.min(pct, 100);
+  return (
+    <View style={styles.ringWrap}>
+      <View style={[styles.ringBack, { borderColor: color + "28" }]} />
+      <View
+        style={[
+          styles.ringFront,
+          {
+            borderTopColor: capped > 0 ? color : "transparent",
+            borderRightColor: capped > 25 ? color : "transparent",
+            borderBottomColor: capped > 50 ? color : "transparent",
+            borderLeftColor: capped > 75 ? color : "transparent",
+            transform: [{ rotate: "-90deg" }],
+          },
+        ]}
+      />
+      <View style={styles.ringInner}>
+        <Text style={[styles.ringPct, { color }]}>{Math.round(capped)}%</Text>
+        <Text style={styles.ringValue}>{value}</Text>
       </View>
-      <Text style={[styles.weekBarLabel, { color: isToday ? color : "#888", fontFamily: isToday ? "Inter_700Bold" : "Inter_400Regular" }]}>
-        {label}
-      </Text>
     </View>
   );
 }
@@ -71,44 +81,57 @@ export default function TrackerScreen() {
   const insets = useSafeAreaInsets();
   const {
     todayWater, todaySteps, addWater, updateSteps,
-    todayCaloriesBurned, todayWorkouts, waterEntries, stepEntries, workoutLogs,
+    todayCaloriesBurned, todayWorkouts,
+    waterEntries, stepEntries, workoutLogs,
   } = useApp();
+  const [activeTab, setActiveTab] = useState<ActiveTab>("summary");
   const [stepsInput, setStepsInput] = useState(String(todaySteps));
-  const [activeTab, setActiveTab] = useState<"water" | "steps" | "workouts">("water");
+  const [bmiHeight, setBmiHeight] = useState("");
+  const [bmiWeight, setBmiWeight] = useState("");
   const isWeb = Platform.OS === "web";
 
   const today = new Date();
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
+  const todayStr = today.toISOString().split("T")[0];
+  const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  const weekData = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
-    d.setDate(d.getDate() - (6 - i));
+    d.setDate(d.getDate() - d.getDay() + i);
+    const ds = d.toISOString().split("T")[0];
     return {
-      date: d.toISOString().split("T")[0],
-      label: d.toLocaleDateString("en-US", { weekday: "short" }).slice(0, 2),
+      water: waterEntries.filter((e) => e.date === ds).reduce((s, e) => s + e.amount, 0),
+      steps: stepEntries.find((e) => e.date === ds)?.steps ?? 0,
+      calories: workoutLogs.filter((l) => l.date === ds).reduce((s, l) => s + l.calories, 0),
     };
   });
-
-  const waterByDay = last7Days.map((d) =>
-    waterEntries.filter((e) => e.date === d.date).reduce((s, e) => s + e.amount, 0)
-  );
-  const stepsByDay = last7Days.map((d) => stepEntries.find((e) => e.date === d.date)?.steps ?? 0);
-  const caloriesByDay = last7Days.map((d) =>
-    workoutLogs.filter((l) => l.date === d.date).reduce((s, l) => s + l.calories, 0)
-  );
-
-  const handleSaveSteps = () => {
-    const val = parseInt(stepsInput, 10);
-    if (!isNaN(val) && val >= 0) updateSteps(val);
-  };
-
-  const handleAddSteps = (amount: number) => {
-    const newSteps = todaySteps + amount;
-    updateSteps(newSteps);
-    setStepsInput(String(newSteps));
-  };
 
   const waterPct = Math.round((todayWater / WATER_GOAL_ML) * 100);
   const stepsPct = Math.round((todaySteps / STEP_GOAL) * 100);
   const calPct = Math.round((todayCaloriesBurned / 500) * 100);
+
+  const handleAddSteps = (amount: number) => {
+    const v = todaySteps + amount;
+    updateSteps(v);
+    setStepsInput(String(v));
+  };
+
+  const handleSaveSteps = () => {
+    const v = parseInt(stepsInput, 10);
+    if (!isNaN(v) && v >= 0) updateSteps(v);
+  };
+
+  const bmiResult = (() => {
+    const h = parseFloat(bmiHeight) / 100;
+    const w = parseFloat(bmiWeight);
+    if (!h || !w || h <= 0) return null;
+    const bmi = w / (h * h);
+    let cat = "", color = "";
+    if (bmi < 18.5) { cat = "Underweight"; color = "#1565C0"; }
+    else if (bmi < 25) { cat = "Healthy Weight"; color = "#2E7D32"; }
+    else if (bmi < 30) { cat = "Overweight"; color = "#E65100"; }
+    else { cat = "Obese"; color = "#C62828"; }
+    return { bmi: bmi.toFixed(1), cat, color };
+  })();
 
   return (
     <ScrollView
@@ -119,327 +142,372 @@ export default function TrackerScreen() {
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12 }]}>
         <Text style={[styles.headerSub, { color: theme.subtitle }]}>Daily Overview</Text>
         <Text style={[styles.headerTitle, { color: theme.text }]}>Tracker</Text>
+
+        <View style={[styles.dateStrip, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <Feather name="calendar" size={13} color={theme.tint} />
+          <Text style={[styles.dateText, { color: theme.text }]}>
+            {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+          </Text>
+        </View>
       </View>
 
-      <View style={[styles.summaryRow, { marginHorizontal: 20 }]}>
+      <View style={styles.ringsRow}>
         {[
-          { label: "Water", value: `${todayWater}ml`, target: `${WATER_GOAL_ML}ml`, pct: waterPct, color: "#1565C0" },
-          { label: "Steps", value: todaySteps.toLocaleString(), target: STEP_GOAL.toLocaleString(), pct: stepsPct, color: "#2E7D32" },
-          { label: "Burned", value: `${todayCaloriesBurned}`, target: "500 kcal", pct: calPct, color: "#E65100" },
-        ].map((item) => (
-          <View key={item.label} style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <CircularProgress
-              value={item.pct}
-              max={100}
-              color={item.color}
-              theme={theme}
-              center={
-                <>
-                  <Text style={[styles.ringPct, { color: item.color }]}>{Math.min(item.pct, 100)}%</Text>
-                </>
-              }
-            />
-            <Text style={[styles.summaryValue, { color: theme.text }]}>{item.value}</Text>
-            <Text style={[styles.summaryLabel, { color: theme.muted }]}>{item.label}</Text>
-            <Text style={[styles.summaryTarget, { color: theme.muted }]}>/ {item.target}</Text>
+          { label: "Water", value: `${todayWater}ml`, pct: waterPct, color: "#1565C0" },
+          { label: "Steps", value: todaySteps.toLocaleString(), pct: stepsPct, color: "#2E7D32" },
+          { label: "Burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#E65100" },
+        ].map((r) => (
+          <View key={r.label} style={[styles.ringCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+            <SummaryRing pct={r.pct} color={r.color} label={r.label} value={r.value} />
+            <Text style={[styles.ringCardLabel, { color: theme.muted }]}>{r.label}</Text>
           </View>
         ))}
       </View>
 
-      <View style={[styles.tabRow, { marginHorizontal: 20 }]}>
-        {(["water", "steps", "workouts"] as const).map((t) => (
+      <View style={styles.tabsRow}>
+        {([
+          { id: "summary", label: "Summary", icon: "bar-chart-2" },
+          { id: "water", label: "Water", icon: "droplet" },
+          { id: "steps", label: "Steps", icon: "navigation" },
+          { id: "bmi", label: "BMI", icon: "user" },
+        ] as { id: ActiveTab; label: string; icon: string }[]).map((t) => (
           <Pressable
-            key={t}
-            onPress={() => setActiveTab(t)}
+            key={t.id}
+            onPress={() => setActiveTab(t.id)}
             style={[
               styles.tabBtn,
-              { backgroundColor: activeTab === t ? theme.tint : theme.card, borderColor: activeTab === t ? theme.tint : theme.divider },
+              { backgroundColor: activeTab === t.id ? theme.tint : theme.card, borderColor: activeTab === t.id ? theme.tint : theme.divider },
             ]}
           >
-            <Feather
-              name={t === "water" ? "droplet" : t === "steps" ? "navigation" : "activity"}
-              size={13}
-              color={activeTab === t ? "#fff" : theme.subtitle}
-            />
-            <Text style={[styles.tabBtnText, { color: activeTab === t ? "#fff" : theme.subtitle }]}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </Text>
+            <Feather name={t.icon as any} size={13} color={activeTab === t.id ? "#fff" : theme.subtitle} />
+            <Text style={[styles.tabBtnText, { color: activeTab === t.id ? "#fff" : theme.subtitle }]}>{t.label}</Text>
           </Pressable>
         ))}
       </View>
 
-      {activeTab === "water" && (
-        <View style={[styles.section, { marginHorizontal: 20 }]}>
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <View style={styles.cardHeaderRow}>
-              <View style={[styles.iconCircle, { backgroundColor: "#1565C020" }]}>
-                <Feather name="droplet" size={20} color="#1565C0" />
-              </View>
-              <View>
-                <Text style={[styles.bigValue, { color: "#1565C0" }]}>{todayWater} ml</Text>
-                <Text style={[styles.goalText, { color: theme.muted }]}>Goal: {WATER_GOAL_ML} ml · {waterPct}% complete</Text>
-              </View>
-            </View>
-            <View style={[styles.progressBar, { backgroundColor: theme.inputBg }]}>
-              <View style={[styles.progressFill, { backgroundColor: "#1565C0", width: `${Math.min(waterPct, 100)}%` as any }]} />
-            </View>
-            <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Quick Add</Text>
-            <View style={styles.quickRow}>
-              {WATER_QUICK_ADD.map((ml) => (
-                <Pressable
-                  key={ml}
-                  onPress={() => addWater(ml)}
-                  style={({ pressed }) => [
-                    styles.quickBtn,
-                    { backgroundColor: "#1565C0" + (pressed ? "30" : "15"), borderColor: "#1565C040" },
-                  ]}
-                >
-                  <Feather name="plus" size={12} color="#1565C0" />
-                  <Text style={[styles.quickBtnText, { color: "#1565C0" }]}>{ml}ml</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          <Text style={[styles.subTitle, { color: theme.text }]}>7-Day Water History</Text>
-          <View style={[styles.chartCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <View style={styles.barChart}>
-              {last7Days.map((d, i) => (
-                <WeekBar key={d.date} value={waterByDay[i]} max={WATER_GOAL_ML} color="#1565C0" label={d.label} />
-              ))}
-            </View>
-            <Text style={[styles.chartCaption, { color: theme.muted }]}>
-              7-day average: {Math.round(waterByDay.reduce((s, v) => s + v, 0) / 7)} ml/day
-            </Text>
-          </View>
-
-          {waterEntries.filter((e) => e.date === today.toISOString().split("T")[0]).length > 0 && (
-            <>
-              <Text style={[styles.subTitle, { color: theme.text }]}>Today's Log</Text>
-              {waterEntries
-                .filter((e) => e.date === today.toISOString().split("T")[0])
-                .slice(0, 8)
-                .map((entry) => (
-                  <View key={entry.id} style={[styles.logRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-                    <View style={[styles.logDot, { backgroundColor: "#1565C0" }]} />
-                    <Text style={[styles.logText, { color: theme.text }]}>{entry.amount} ml</Text>
-                    <Text style={[styles.logTime, { color: theme.muted }]}>{entry.time}</Text>
+      <View style={styles.sectionWrap}>
+        {activeTab === "summary" && (
+          <View style={{ gap: 16 }}>
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>Today at a Glance</Text>
+              {[
+                { label: "Water Intake", value: `${todayWater} / ${WATER_GOAL_ML} ml`, pct: waterPct, color: "#1565C0", icon: "droplet" },
+                { label: "Steps", value: `${todaySteps.toLocaleString()} / ${STEP_GOAL.toLocaleString()}`, pct: stepsPct, color: "#2E7D32", icon: "navigation" },
+                { label: "Calories Burned", value: `${todayCaloriesBurned} / 500 kcal`, pct: calPct, color: "#E65100", icon: "zap" },
+                { label: "Workouts Done", value: `${todayWorkouts.length} workout${todayWorkouts.length !== 1 ? "s" : ""}`, pct: Math.min(todayWorkouts.length * 33, 100), color: "#6A1B9A", icon: "activity" },
+              ].map((item) => (
+                <View key={item.label} style={styles.glanceRow}>
+                  <View style={[styles.glanceIcon, { backgroundColor: item.color + "18" }]}>
+                    <Feather name={item.icon as any} size={16} color={item.color} />
                   </View>
-                ))}
-            </>
-          )}
-        </View>
-      )}
-
-      {activeTab === "steps" && (
-        <View style={[styles.section, { marginHorizontal: 20 }]}>
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <View style={styles.cardHeaderRow}>
-              <View style={[styles.iconCircle, { backgroundColor: "#2E7D3220" }]}>
-                <Feather name="navigation" size={20} color="#2E7D32" />
-              </View>
-              <View>
-                <Text style={[styles.bigValue, { color: "#2E7D32" }]}>{todaySteps.toLocaleString()} steps</Text>
-                <Text style={[styles.goalText, { color: theme.muted }]}>Goal: {STEP_GOAL.toLocaleString()} · {stepsPct}% complete</Text>
-              </View>
-            </View>
-            <View style={[styles.progressBar, { backgroundColor: theme.inputBg }]}>
-              <View style={[styles.progressFill, { backgroundColor: "#2E7D32", width: `${Math.min(stepsPct, 100)}%` as any }]} />
-            </View>
-
-            <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Quick Add Steps</Text>
-            <View style={styles.quickRow}>
-              {STEP_QUICK_ADD.map((s) => (
-                <Pressable
-                  key={s}
-                  onPress={() => handleAddSteps(s)}
-                  style={({ pressed }) => [
-                    styles.quickBtn,
-                    { backgroundColor: "#2E7D32" + (pressed ? "30" : "15"), borderColor: "#2E7D3240" },
-                  ]}
-                >
-                  <Feather name="plus" size={12} color="#2E7D32" />
-                  <Text style={[styles.quickBtnText, { color: "#2E7D32" }]}>{s.toLocaleString()}</Text>
-                </Pressable>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.glanceLabelRow}>
+                      <Text style={[styles.glanceLabel, { color: theme.subtitle }]}>{item.label}</Text>
+                      <Text style={[styles.glanceVal, { color: item.color }]}>{item.value}</Text>
+                    </View>
+                    <ProgressBar value={item.pct} max={100} color={item.color} theme={theme} />
+                  </View>
+                </View>
               ))}
             </View>
 
-            <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Set Exact Count</Text>
-            <View style={styles.stepInputRow}>
-              <Pressable
-                onPress={() => { const v = Math.max(0, (parseInt(stepsInput) || 0) - 100); setStepsInput(String(v)); updateSteps(v); }}
-                style={[styles.stepAdjBtn, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}
-              >
-                <Feather name="minus" size={16} color={theme.text} />
-              </Pressable>
-              <TextInput
-                value={stepsInput}
-                onChangeText={setStepsInput}
-                onSubmitEditing={handleSaveSteps}
-                keyboardType="number-pad"
-                style={[styles.stepInput, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text }]}
-              />
-              <Pressable
-                onPress={() => { const v = (parseInt(stepsInput) || 0) + 100; setStepsInput(String(v)); updateSteps(v); }}
-                style={[styles.stepAdjBtn, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}
-              >
-                <Feather name="plus" size={16} color={theme.text} />
-              </Pressable>
-              <Pressable
-                onPress={handleSaveSteps}
-                style={[styles.saveBtn, { backgroundColor: theme.tint }]}
-              >
-                <Feather name="check" size={18} color="#fff" />
-              </Pressable>
-            </View>
-          </View>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>This Week</Text>
 
-          <Text style={[styles.subTitle, { color: theme.text }]}>7-Day Steps History</Text>
-          <View style={[styles.chartCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <View style={styles.barChart}>
-              {last7Days.map((d, i) => (
-                <WeekBar key={d.date} value={stepsByDay[i]} max={STEP_GOAL} color="#2E7D32" label={d.label} />
-              ))}
-            </View>
-            <Text style={[styles.chartCaption, { color: theme.muted }]}>
-              7-day average: {Math.round(stepsByDay.reduce((s, v) => s + v, 0) / 7).toLocaleString()} steps/day
-            </Text>
-          </View>
-
-          <View style={[styles.calorieInfo, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <Feather name="zap" size={16} color="#E65100" />
-            <Text style={[styles.calorieText, { color: theme.text }]}>
-              ~{Math.round(todaySteps * 0.04)} kcal burned from steps today
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {activeTab === "workouts" && (
-        <View style={[styles.section, { marginHorizontal: 20 }]}>
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <View style={styles.cardHeaderRow}>
-              <View style={[styles.iconCircle, { backgroundColor: "#E6510020" }]}>
-                <Feather name="zap" size={20} color="#E65100" />
-              </View>
-              <View>
-                <Text style={[styles.bigValue, { color: "#E65100" }]}>{todayCaloriesBurned} kcal</Text>
-                <Text style={[styles.goalText, { color: theme.muted }]}>{todayWorkouts.length} workout{todayWorkouts.length !== 1 ? "s" : ""} today</Text>
-              </View>
-            </View>
-            <View style={[styles.progressBar, { backgroundColor: theme.inputBg }]}>
-              <View style={[styles.progressFill, { backgroundColor: "#E65100", width: `${Math.min(calPct, 100)}%` as any }]} />
-            </View>
-          </View>
-
-          <Text style={[styles.subTitle, { color: theme.text }]}>7-Day Workout History</Text>
-          <View style={[styles.chartCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <View style={styles.barChart}>
-              {last7Days.map((d, i) => (
-                <WeekBar key={d.date} value={caloriesByDay[i]} max={500} color="#E65100" label={d.label} />
-              ))}
-            </View>
-            <Text style={[styles.chartCaption, { color: theme.muted }]}>
-              7-day total: {caloriesByDay.reduce((s, v) => s + v, 0)} kcal burned
-            </Text>
-          </View>
-
-          {todayWorkouts.length === 0 ? (
-            <View style={[styles.emptyCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Feather name="activity" size={32} color={theme.muted} />
-              <Text style={[styles.emptyTitle, { color: theme.text }]}>No workouts logged today</Text>
-              <Text style={[styles.emptySubtext, { color: theme.muted }]}>
-                Head to the Fitness tab to log your first workout
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <Text style={[styles.cardTitle, { color: "#1565C0" }]}>💧 Water (ml)</Text>
+              <WeekChart data={weekData.map((d) => d.water)} max={WATER_GOAL_ML} color="#1565C0" labels={dayNames} />
+              <Text style={[styles.chartAvg, { color: theme.muted }]}>
+                Weekly avg: {Math.round(weekData.reduce((s, d) => s + d.water, 0) / 7)} ml/day
               </Text>
             </View>
-          ) : (
-            <View style={styles.workoutList}>
-              {todayWorkouts.map((w) => (
-                <View key={w.id} style={[styles.workoutRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-                  <View style={[styles.workoutIcon, { backgroundColor: theme.tint + "20" }]}>
-                    <Feather name="activity" size={16} color={theme.tint} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.workoutName, { color: theme.text }]}>{w.exerciseName}</Text>
-                    <Text style={[styles.workoutMeta, { color: theme.muted }]}>{w.duration} min · {w.calories} kcal burned</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
 
-          {workoutLogs.length > 0 && (
-            <>
-              <Text style={[styles.subTitle, { color: theme.text }]}>Recent History</Text>
-              {workoutLogs.slice(0, 10).map((w) => (
-                <View key={w.id} style={[styles.logRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-                  <View style={[styles.logDot, { backgroundColor: "#E65100" }]} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.logText, { color: theme.text }]}>{w.exerciseName}</Text>
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <Text style={[styles.cardTitle, { color: "#2E7D32" }]}>👟 Steps</Text>
+              <WeekChart data={weekData.map((d) => d.steps)} max={STEP_GOAL} color="#2E7D32" labels={dayNames} />
+              <Text style={[styles.chartAvg, { color: theme.muted }]}>
+                Weekly avg: {Math.round(weekData.reduce((s, d) => s + d.steps, 0) / 7).toLocaleString()} steps/day
+              </Text>
+            </View>
+
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <Text style={[styles.cardTitle, { color: "#E65100" }]}>🔥 Calories Burned</Text>
+              <WeekChart data={weekData.map((d) => d.calories)} max={500} color="#E65100" labels={dayNames} />
+              <Text style={[styles.chartAvg, { color: theme.muted }]}>
+                Weekly total: {weekData.reduce((s, d) => s + d.calories, 0)} kcal
+              </Text>
+            </View>
+
+            {todayWorkouts.length > 0 && (
+              <View>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Today's Workouts</Text>
+                {todayWorkouts.map((w) => (
+                  <View key={w.id} style={[styles.workoutRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+                    <View style={[styles.workoutIcon, { backgroundColor: theme.tint + "20" }]}>
+                      <Feather name="activity" size={16} color={theme.tint} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.workoutName, { color: theme.text }]}>{w.exerciseName}</Text>
+                      <Text style={[styles.workoutMeta, { color: theme.muted }]}>{w.duration} min · {w.calories} kcal</Text>
+                    </View>
+                    <Text style={[styles.workoutKcal, { color: "#E65100" }]}>{w.calories} kcal</Text>
                   </View>
-                  <Text style={[styles.logTime, { color: theme.muted }]}>{w.date}</Text>
-                  <Text style={[styles.logKcal, { color: "#E65100" }]}>{w.calories} kcal</Text>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {activeTab === "water" && (
+          <View style={{ gap: 14 }}>
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <View style={styles.mainStatRow}>
+                <View style={[styles.mainStatIcon, { backgroundColor: "#1565C020" }]}>
+                  <Feather name="droplet" size={22} color="#1565C0" />
+                </View>
+                <View>
+                  <Text style={[styles.mainStatVal, { color: "#1565C0" }]}>{todayWater} ml</Text>
+                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>of {WATER_GOAL_ML} ml goal · {waterPct}%</Text>
+                </View>
+              </View>
+              <ProgressBar value={todayWater} max={WATER_GOAL_ML} color="#1565C0" theme={theme} />
+              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Quick Add</Text>
+              <View style={styles.quickRow}>
+                {WATER_QUICK.map((ml) => (
+                  <Pressable
+                    key={ml}
+                    onPress={() => addWater(ml)}
+                    style={({ pressed }) => [styles.quickBtn, { backgroundColor: "#1565C0" + (pressed ? "35" : "15"), borderColor: "#1565C050" }]}
+                  >
+                    <Feather name="plus" size={12} color="#1565C0" />
+                    <Text style={[styles.quickBtnText, { color: "#1565C0" }]}>{ml}ml</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Today's Log</Text>
+            {waterEntries.filter((e) => e.date === todayStr).length === 0 ? (
+              <View style={[styles.emptyBox, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+                <Feather name="droplet" size={28} color={theme.muted} />
+                <Text style={[styles.emptyText, { color: theme.muted }]}>No water logged today</Text>
+              </View>
+            ) : (
+              waterEntries.filter((e) => e.date === todayStr).map((e) => (
+                <View key={e.id} style={[styles.logRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+                  <View style={[styles.logDot, { backgroundColor: "#1565C0" }]} />
+                  <Text style={[styles.logMain, { color: theme.text }]}>{e.amount} ml</Text>
+                  <Text style={[styles.logTime, { color: theme.muted }]}>{e.time}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        )}
+
+        {activeTab === "steps" && (
+          <View style={{ gap: 14 }}>
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <View style={styles.mainStatRow}>
+                <View style={[styles.mainStatIcon, { backgroundColor: "#2E7D3220" }]}>
+                  <Feather name="navigation" size={22} color="#2E7D32" />
+                </View>
+                <View>
+                  <Text style={[styles.mainStatVal, { color: "#2E7D32" }]}>{todaySteps.toLocaleString()}</Text>
+                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>of {STEP_GOAL.toLocaleString()} goal · {stepsPct}%</Text>
+                </View>
+              </View>
+              <ProgressBar value={todaySteps} max={STEP_GOAL} color="#2E7D32" theme={theme} />
+
+              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Quick Add Steps</Text>
+              <View style={styles.quickRow}>
+                {STEPS_QUICK.map((s) => (
+                  <Pressable
+                    key={s}
+                    onPress={() => handleAddSteps(s)}
+                    style={({ pressed }) => [styles.quickBtn, { backgroundColor: "#2E7D32" + (pressed ? "35" : "15"), borderColor: "#2E7D3250" }]}
+                  >
+                    <Feather name="plus" size={12} color="#2E7D32" />
+                    <Text style={[styles.quickBtnText, { color: "#2E7D32" }]}>{s.toLocaleString()}</Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Set Exact Steps</Text>
+              <View style={styles.stepsInputRow}>
+                <Pressable
+                  onPress={() => { const v = Math.max(0, (parseInt(stepsInput) || 0) - 100); setStepsInput(String(v)); updateSteps(v); }}
+                  style={[styles.adjBtn, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}
+                >
+                  <Feather name="minus" size={16} color={theme.text} />
+                </Pressable>
+                <TextInput
+                  value={stepsInput}
+                  onChangeText={setStepsInput}
+                  onSubmitEditing={handleSaveSteps}
+                  keyboardType="number-pad"
+                  style={[styles.stepsInput, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text }]}
+                />
+                <Pressable
+                  onPress={() => { const v = (parseInt(stepsInput) || 0) + 100; setStepsInput(String(v)); updateSteps(v); }}
+                  style={[styles.adjBtn, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}
+                >
+                  <Feather name="plus" size={16} color={theme.text} />
+                </Pressable>
+                <Pressable onPress={handleSaveSteps} style={[styles.saveBtn, { backgroundColor: theme.tint }]}>
+                  <Feather name="check" size={18} color="#fff" />
+                </Pressable>
+              </View>
+
+              <View style={[styles.calorieEstimate, { backgroundColor: theme.inputBg }]}>
+                <Feather name="zap" size={14} color="#E65100" />
+                <Text style={[styles.calorieEstimateText, { color: theme.text }]}>
+                  Estimated burn from steps: <Text style={{ color: "#E65100", fontFamily: "Inter_700Bold" }}>{Math.round(todaySteps * 0.04)} kcal</Text>
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {activeTab === "bmi" && (
+          <View style={{ gap: 14 }}>
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <View style={styles.bmiHeader}>
+                <Feather name="user" size={20} color={theme.tint} />
+                <Text style={[styles.cardTitle, { color: theme.text }]}>BMI Calculator</Text>
+              </View>
+              <Text style={[styles.bmiSubtext, { color: theme.subtitle }]}>
+                Body Mass Index — a general indicator of healthy weight for your height
+              </Text>
+
+              <View style={styles.bmiInputsRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.bmiInputLabel, { color: theme.subtitle }]}>Height (cm)</Text>
+                  <TextInput
+                    value={bmiHeight}
+                    onChangeText={setBmiHeight}
+                    placeholder="e.g. 170"
+                    placeholderTextColor={theme.muted}
+                    keyboardType="decimal-pad"
+                    style={[styles.bmiInput, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text }]}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.bmiInputLabel, { color: theme.subtitle }]}>Weight (kg)</Text>
+                  <TextInput
+                    value={bmiWeight}
+                    onChangeText={setBmiWeight}
+                    placeholder="e.g. 65"
+                    placeholderTextColor={theme.muted}
+                    keyboardType="decimal-pad"
+                    style={[styles.bmiInput, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.text }]}
+                  />
+                </View>
+              </View>
+
+              {bmiResult && (
+                <View style={[styles.bmiResult, { backgroundColor: bmiResult.color + "10", borderColor: bmiResult.color + "30" }]}>
+                  <Text style={[styles.bmiScore, { color: bmiResult.color }]}>BMI: {bmiResult.bmi}</Text>
+                  <Text style={[styles.bmiCat, { color: bmiResult.color }]}>{bmiResult.cat}</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>BMI Reference Scale</Text>
+              {[
+                { range: "Below 18.5", cat: "Underweight", color: "#1565C0" },
+                { range: "18.5 – 24.9", cat: "Healthy Weight ✓", color: "#2E7D32" },
+                { range: "25.0 – 29.9", cat: "Overweight", color: "#E65100" },
+                { range: "30.0 and above", cat: "Obese", color: "#C62828" },
+              ].map((r) => (
+                <View key={r.range} style={styles.bmiScaleRow}>
+                  <View style={[styles.bmiScaleDot, { backgroundColor: r.color }]} />
+                  <Text style={[styles.bmiScaleRange, { color: theme.subtitle }]}>{r.range}</Text>
+                  <Text style={[styles.bmiScaleCat, { color: r.color }]}>{r.cat}</Text>
                 </View>
               ))}
-            </>
-          )}
-        </View>
-      )}
+              <Text style={[styles.bmiDisclaimer, { color: theme.muted }]}>
+                * BMI is a screening tool, not a diagnostic measure. Consult a healthcare professional for a complete assessment.
+              </Text>
+            </View>
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 16 },
+  header: { paddingHorizontal: 20, paddingBottom: 14, gap: 10 },
   headerSub: { fontSize: 11, fontFamily: "Inter_500Medium", letterSpacing: 1.2, textTransform: "uppercase" },
   headerTitle: { fontSize: 32, fontFamily: "Inter_700Bold", marginTop: 2 },
-  summaryRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
-  summaryCard: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 10, alignItems: "center", gap: 4 },
-  ringPct: { fontSize: 13, fontFamily: "Inter_700Bold" },
-  summaryValue: { fontSize: 12, fontFamily: "Inter_700Bold", textAlign: "center" },
-  summaryLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", textAlign: "center" },
-  summaryTarget: { fontSize: 9, fontFamily: "Inter_400Regular", textAlign: "center" },
-  tabRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
-  tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 9, borderRadius: 10, borderWidth: 1 },
-  tabBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  section: { gap: 14 },
-  card: { borderRadius: 16, borderWidth: 1, padding: 16 },
-  cardHeaderRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 14 },
-  iconCircle: { width: 46, height: 46, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  bigValue: { fontSize: 22, fontFamily: "Inter_700Bold" },
-  goalText: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
-  progressBar: { height: 8, borderRadius: 4, overflow: "hidden", marginBottom: 16 },
-  progressFill: { height: "100%", borderRadius: 4 },
-  quickLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 },
-  quickRow: { flexDirection: "row", gap: 8 },
-  quickBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 9, borderRadius: 10, borderWidth: 1 },
-  quickBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  stepInputRow: { flexDirection: "row", gap: 8, alignItems: "center" },
-  stepAdjBtn: { width: 42, height: 42, borderRadius: 10, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  stepInput: { flex: 1, borderRadius: 10, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, fontFamily: "Inter_600SemiBold", textAlign: "center" },
-  saveBtn: { width: 42, height: 42, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  subTitle: { fontSize: 16, fontFamily: "Inter_700Bold" },
-  chartCard: { borderRadius: 16, borderWidth: 1, padding: 16 },
-  barChart: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", height: 80, marginBottom: 8 },
-  weekBarCol: { alignItems: "center", gap: 4, flex: 1 },
-  weekBarBg: { width: "70%", borderRadius: 4, justifyContent: "flex-end", overflow: "hidden" },
-  weekBarFill: { width: "100%", borderRadius: 4 },
-  weekBarLabel: { fontSize: 10 },
-  chartCaption: { fontSize: 11, fontFamily: "Inter_400Regular", textAlign: "center" },
-  calorieInfo: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 12, borderWidth: 1, padding: 12 },
-  calorieText: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  emptyCard: { borderRadius: 16, borderWidth: 1, padding: 32, alignItems: "center", gap: 8 },
-  emptyTitle: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
-  emptySubtext: { fontSize: 13, fontFamily: "Inter_400Regular", textAlign: "center" },
-  workoutList: { gap: 8 },
-  workoutRow: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 12, borderWidth: 1, padding: 12 },
+  dateStrip: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
+  dateText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  ringsRow: { flexDirection: "row", gap: 10, marginHorizontal: 20, marginBottom: 14 },
+  ringCard: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 10, alignItems: "center", gap: 6 },
+  ringWrap: { width: 76, height: 76, alignItems: "center", justifyContent: "center", position: "relative" },
+  ringBack: { position: "absolute", width: 76, height: 76, borderRadius: 38, borderWidth: 8 },
+  ringFront: { position: "absolute", width: 76, height: 76, borderRadius: 38, borderWidth: 8 },
+  ringInner: { alignItems: "center" },
+  ringPct: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  ringValue: { fontSize: 9, fontFamily: "Inter_400Regular", color: "#888", textAlign: "center" },
+  ringCardLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textAlign: "center" },
+  tabsRow: { flexDirection: "row", gap: 7, marginHorizontal: 20, marginBottom: 14 },
+  tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingVertical: 8, borderRadius: 10, borderWidth: 1 },
+  tabBtnText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+  sectionWrap: { marginHorizontal: 20, gap: 14 },
+  card: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 12 },
+  cardTitle: { fontSize: 16, fontFamily: "Inter_700Bold" },
+  sectionTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  glanceRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  glanceIcon: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 },
+  glanceLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
+  glanceLabel: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  glanceVal: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  pBar: { height: 7, borderRadius: 4, overflow: "hidden" },
+  pBarFill: { height: "100%", borderRadius: 4 },
+  chartRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", height: 80 },
+  barCol: { alignItems: "center", gap: 4, flex: 1 },
+  barBg: { width: "65%", borderRadius: 4, justifyContent: "flex-end", overflow: "hidden" },
+  barFill: { width: "100%", borderRadius: 4 },
+  barLabel: { fontSize: 10 },
+  chartAvg: { fontSize: 11, fontFamily: "Inter_400Regular", textAlign: "center" },
+  workoutRow: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 12, borderWidth: 1, padding: 12, marginBottom: 8 },
   workoutIcon: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   workoutName: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   workoutMeta: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  logRow: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 10, borderWidth: 1, padding: 10 },
+  workoutKcal: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  mainStatRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  mainStatIcon: { width: 48, height: 48, borderRadius: 13, alignItems: "center", justifyContent: "center" },
+  mainStatVal: { fontSize: 24, fontFamily: "Inter_700Bold" },
+  mainStatLabel: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
+  quickLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
+  quickRow: { flexDirection: "row", gap: 8 },
+  quickBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 10, borderRadius: 10, borderWidth: 1 },
+  quickBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  stepsInputRow: { flexDirection: "row", gap: 8, alignItems: "center" },
+  adjBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  stepsInput: { flex: 1, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontFamily: "Inter_600SemiBold", textAlign: "center" },
+  saveBtn: { width: 44, height: 44, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  calorieEstimate: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 10, padding: 12 },
+  calorieEstimateText: { fontSize: 13, fontFamily: "Inter_400Regular", flex: 1 },
+  logRow: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 10, borderWidth: 1, padding: 11, marginBottom: 6 },
   logDot: { width: 7, height: 7, borderRadius: 3.5 },
-  logText: { flex: 1, fontSize: 13, fontFamily: "Inter_500Medium" },
-  logTime: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  logKcal: { fontSize: 12, fontFamily: "Inter_600SemiBold", marginLeft: 8 },
+  logMain: { flex: 1, fontSize: 14, fontFamily: "Inter_500Medium" },
+  logTime: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  emptyBox: { borderRadius: 14, borderWidth: 1, padding: 28, alignItems: "center", gap: 8 },
+  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular" },
+  bmiHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  bmiSubtext: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
+  bmiInputsRow: { flexDirection: "row", gap: 12 },
+  bmiInputLabel: { fontSize: 12, fontFamily: "Inter_500Medium", marginBottom: 6 },
+  bmiInput: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, fontFamily: "Inter_600SemiBold" },
+  bmiResult: { borderRadius: 14, borderWidth: 1, padding: 16, alignItems: "center", gap: 4 },
+  bmiScore: { fontSize: 28, fontFamily: "Inter_700Bold" },
+  bmiCat: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
+  bmiScaleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  bmiScaleDot: { width: 8, height: 8, borderRadius: 4, flexShrink: 0 },
+  bmiScaleRange: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular" },
+  bmiScaleCat: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  bmiDisclaimer: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },
 });
