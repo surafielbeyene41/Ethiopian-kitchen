@@ -76,35 +76,33 @@ export default function SavedScreen() {
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 16 }]}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.headerSub}>YOUR COLLECTION</Text>
-            <Text style={styles.headerTitle}>Saved Recipes</Text>
+            <Text style={[styles.headerSub, { color: theme.subtitle }]}>YOUR COLLECTION</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>Saved Recipes</Text>
           </View>
           <View style={styles.headerActions}>
             <Pressable
               onPress={() => setViewMode(viewMode === "list" ? "grid" : "list")}
-              style={styles.iconBtn}
+              style={[styles.iconBtn, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
             >
-              <BlurView intensity={20} tint="light" style={styles.iconBtnBlur}>
-                <Feather name={viewMode === "list" ? "grid" : "list"} size={18} color="#FFC107" />
-              </BlurView>
+              <Feather name={viewMode === "list" ? "grid" : "list"} size={18} color={theme.tint} />
             </Pressable>
           </View>
         </View>
 
-        <View style={styles.statsBanner}>
-          <BlurView intensity={10} tint="light" style={styles.statsBannerBlur}>
+        <View style={[styles.statsBanner, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <View style={styles.statsBannerBlur}>
             {[
-              { label: "Saved", value: String(sorted.length), icon: "bookmark", color: "#FFC107" },
-              { label: "Avg Time", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.time, 0) / sorted.length)}m`, icon: "clock", color: "#FFC107" },
-              { label: "Avg Kcal", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.calories, 0) / sorted.length)}`, icon: "zap", color: "#FFC107" },
+              { label: "Saved", value: String(sorted.length), icon: "bookmark", color: theme.tint },
+              { label: "Avg Time", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.time, 0) / sorted.length)}m`, icon: "clock", color: theme.tint },
+              { label: "Avg Kcal", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.calories, 0) / sorted.length)}`, icon: "zap", color: theme.tint },
             ].map((s, i) => (
-              <View key={s.label} style={[styles.statItem, i < 2 && { borderRightWidth: 1, borderRightColor: "rgba(255,193,7,0.1)" }]}>
+              <View key={s.label} style={[styles.statItem, i < 2 && { borderRightWidth: 1, borderRightColor: theme.divider }]}>
                 <Feather name={s.icon as any} size={14} color={s.color} />
-                <Text style={styles.statValue}>{s.value}</Text>
-                <Text style={styles.statLabel}>{s.label}</Text>
+                <Text style={[styles.statValue, { color: theme.text }]}>{s.value}</Text>
+                <Text style={[styles.statLabel, { color: theme.muted }]}>{s.label}</Text>
               </View>
             ))}
-          </BlurView>
+          </View>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortRow}>
@@ -115,12 +113,12 @@ export default function SavedScreen() {
               style={[
                 styles.sortPill,
                 {
-                  backgroundColor: sortId === opt.id ? "#FFC107" : "rgba(255,255,255,0.05)",
-                  borderColor: sortId === opt.id ? "#FFC107" : "rgba(255,255,255,0.08)",
+                  backgroundColor: sortId === opt.id ? theme.tint : theme.tagBg,
+                  borderColor: sortId === opt.id ? theme.tint : theme.divider,
                 },
               ]}
             >
-              <Text style={[styles.sortPillText, { color: sortId === opt.id ? "#000" : "rgba(255,255,255,0.5)" }]}>{opt.label}</Text>
+              <Text style={[styles.sortPillText, { color: sortId === opt.id ? "#FFFFFF" : theme.muted }]}>{opt.label}</Text>
             </Pressable>
           ))}
         </ScrollView>

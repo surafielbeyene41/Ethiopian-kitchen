@@ -91,33 +91,33 @@ export default function RecipeDetailScreen() {
 
         <View style={styles.content}>
           <View style={styles.nutritionWrapper}>
-            <BlurView intensity={20} tint="light" style={[styles.nutritionRow, { borderColor: "rgba(255,255,255,0.1)" }]}>
+            <View style={[styles.nutritionRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               {[
                 { label: "Calories", value: String(recipe.calories), unit: "kcal", color: "#FFC107" },
                 { label: "Protein", value: `${recipe.protein}g`, unit: "", color: "#4CAF50" },
                 { label: "Carbs", value: `${recipe.carbs}g`, unit: "", color: "#2196F3" },
                 { label: "Fat", value: `${recipe.fat}g`, unit: "", color: "#E91E63" },
               ].map((n, i) => (
-                <View key={n.label} style={[styles.nutritionItem, i < 3 && { borderRightWidth: 1, borderRightColor: "rgba(255,255,255,0.1)" }]}>
+                <View key={n.label} style={[styles.nutritionItem, i < 3 && { borderRightWidth: 1, borderRightColor: theme.divider }]}>
                   <Text style={[styles.nutritionValue, { color: n.color }]}>{n.value}</Text>
-                  <Text style={[styles.nutritionLabel, { color: "rgba(255,255,255,0.5)" }]}>{n.label}</Text>
+                  <Text style={[styles.nutritionLabel, { color: theme.muted }]}>{n.label}</Text>
                 </View>
               ))}
-            </BlurView>
+            </View>
           </View>
 
           <Text style={[styles.descText, { color: theme.subtitle }]}>{recipe.description}</Text>
 
           <Pressable
             onPress={() => setShowCulture(!showCulture)}
-            style={[styles.cultureToggle, { backgroundColor: theme.tagBg, borderColor: recipe.color + "30" }]}
+            style={[styles.cultureToggle, { backgroundColor: theme.tagBg, borderColor: theme.divider }]}
           >
-            <Feather name="globe" size={14} color={recipe.color} />
-            <Text style={[styles.cultureToggleLabel, { color: recipe.color }]}>Ethiopian Cultural Insight</Text>
-            <Feather name={showCulture ? "chevron-up" : "chevron-down"} size={14} color={recipe.color} style={{ marginLeft: "auto" }} />
+            <Feather name="globe" size={14} color={theme.tint} />
+            <Text style={[styles.cultureToggleLabel, { color: theme.tint }]}>Ethiopian Cultural Insight</Text>
+            <Feather name={showCulture ? "chevron-up" : "chevron-down"} size={14} color={theme.tint} style={{ marginLeft: "auto" }} />
           </Pressable>
           {showCulture && (
-            <View style={[styles.cultureCard, { backgroundColor: recipe.color + "12", borderColor: recipe.color + "35" }]}>
+            <View style={[styles.cultureCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               <Text style={[styles.cultureText, { color: theme.text }]}>{recipe.culturalInsight}</Text>
             </View>
           )}
@@ -194,11 +194,11 @@ export default function RecipeDetailScreen() {
               onPress={() => setActiveStep(activeStep === step.step ? null : step.step)}
               style={[
                 styles.stepCard,
-                { backgroundColor: activeStep === step.step ? "rgba(255,193,7,0.12)" : "rgba(255,255,255,0.03)", borderColor: activeStep === step.step ? "#FFC107" : "rgba(255,255,255,0.08)" },
+                { backgroundColor: activeStep === step.step ? theme.tint + "15" : theme.card, borderColor: activeStep === step.step ? theme.tint : theme.cardBorder },
               ]}
             >
-              <View style={[styles.stepCircle, { backgroundColor: activeStep === step.step ? "#FFC107" : "rgba(255,255,255,0.1)" }]}>
-                <Text style={[styles.stepNum, { color: activeStep === step.step ? "#000" : "rgba(255,255,255,0.6)" }]}>
+              <View style={[styles.stepCircle, { backgroundColor: activeStep === step.step ? theme.tint : theme.divider }]}>
+                <Text style={[styles.stepNum, { color: activeStep === step.step ? "#000" : theme.muted }]}>
                   {step.step}
                 </Text>
               </View>

@@ -84,6 +84,7 @@ function FeaturedCard({ recipe }: { recipe: Recipe }) {
 function RecipeCard({ recipe }: { recipe: Recipe }) {
   const { isRecipeSaved, toggleSaveRecipe } = useApp();
   const saved = isRecipeSaved(recipe.id);
+  const { theme } = useTheme();
 
   return (
     <Pressable
@@ -91,7 +92,8 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
       style={({ pressed }) => [
         styles.card,
         {
-          borderColor: "rgba(255,255,255,0.08)",
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorder,
           opacity: pressed ? 0.93 : 1,
           transform: [{ scale: pressed ? 0.985 : 1 }]
         },
@@ -102,7 +104,7 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
         <View style={[styles.cardColorBar, { backgroundColor: recipe.color }]} />
         <Pressable
           onPress={(e) => { e.stopPropagation(); toggleSaveRecipe(recipe.id); }}
-          style={[styles.saveBtn, { backgroundColor: saved ? "#FFC107" : "rgba(0,0,0,0.4)" }]}
+          style={[styles.saveBtn, { backgroundColor: saved ? theme.gold : "rgba(0,0,0,0.4)" }]}
         >
           <Feather name="bookmark" size={15} color={saved ? "#000" : "#fff"} />
         </Pressable>
@@ -110,28 +112,28 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={[styles.cardAmharic, { color: "rgba(255,255,255,0.5)" }]}>{recipe.amharic}</Text>
-        <Text style={[styles.cardName, { color: "#FFF" }]}>{recipe.name}</Text>
-        <Text style={[styles.cardDesc, { color: "rgba(255,255,255,0.6)" }]} numberOfLines={2}>{recipe.description}</Text>
+        <Text style={[styles.cardAmharic, { color: theme.muted }]}>{recipe.amharic}</Text>
+        <Text style={[styles.cardName, { color: theme.text }]}>{recipe.name}</Text>
+        <Text style={[styles.cardDesc, { color: theme.subtitle }]} numberOfLines={2}>{recipe.description}</Text>
 
         <View style={styles.cardMetaRow}>
           <View style={styles.cardMetaItem}>
-            <Feather name="clock" size={12} color="#FFC107" />
-            <Text style={[styles.cardMetaText, { color: "rgba(255,255,255,0.8)" }]}>
+            <Feather name="clock" size={12} color={theme.tint} />
+            <Text style={[styles.cardMetaText, { color: theme.muted }]}>
               {recipe.time >= 60 ? `${Math.floor(recipe.time / 60)}h${recipe.time % 60 > 0 ? ` ${recipe.time % 60}m` : ""}` : `${recipe.time}m`}
             </Text>
           </View>
-          <View style={styles.cardMetaDot} />
+          <View style={[styles.cardMetaDot, { backgroundColor: theme.divider }]} />
           <View style={styles.cardMetaItem}>
-            <Feather name="zap" size={12} color="#FFC107" />
-            <Text style={[styles.cardMetaText, { color: "rgba(255,255,255,0.8)" }]}>{recipe.calories} kcal</Text>
+            <Feather name="zap" size={12} color={theme.tint} />
+            <Text style={[styles.cardMetaText, { color: theme.muted }]}>{recipe.calories} kcal</Text>
           </View>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
           {recipe.tags.slice(0, 5).map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
+            <View key={tag} style={[styles.tag, { backgroundColor: theme.tagBg }]}>
+              <Text style={[styles.tagText, { color: theme.tagText }]}>{tag}</Text>
             </View>
           ))}
         </ScrollView>

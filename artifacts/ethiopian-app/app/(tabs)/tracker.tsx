@@ -160,10 +160,10 @@ export default function TrackerScreen() {
           { label: "Burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#FF9800" },
         ].map((r) => (
           <View key={r.label} style={styles.ringCardWrapper}>
-            <BlurView intensity={15} tint="light" style={[styles.ringCard, { borderColor: "rgba(255,255,255,0.08)" }]}>
+            <View style={[styles.ringCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               <SummaryRing pct={r.pct} color={r.color} label={r.label} value={r.value} />
-              <Text style={[styles.ringCardLabel, { color: "rgba(255,255,255,0.5)" }]}>{r.label}</Text>
-            </BlurView>
+              <Text style={[styles.ringCardLabel, { color: theme.muted }]}>{r.label}</Text>
+            </View>
           </View>
         ))}
       </View>
@@ -196,7 +196,7 @@ export default function TrackerScreen() {
         {activeTab === "summary" && (
           <View style={{ gap: 16 }}>
             <View style={styles.card}>
-              <Text style={[styles.cardTitle, { color: "#FFFFFF" }]}>Today at a Glance</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>Today at a Glance</Text>
               {[
                 { label: "Water Intake", value: `${todayWater} / ${WATER_GOAL_ML} ml`, pct: waterPct, color: "#2196F3", icon: "droplet" },
                 { label: "Steps", value: `${todaySteps.toLocaleString()} / ${STEP_GOAL.toLocaleString()}`, pct: stepsPct, color: "#4CAF50", icon: "navigation" },
@@ -208,7 +208,7 @@ export default function TrackerScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={styles.glanceLabelRow}>
-                      <Text style={[styles.glanceLabel, { color: "rgba(255,255,255,0.5)" }]}>{item.label}</Text>
+                      <Text style={[styles.glanceLabel, { color: theme.muted }]}>{item.label}</Text>
                       <Text style={[styles.glanceVal, { color: item.color }]}>{item.value}</Text>
                     </View>
                     <ProgressBar value={item.pct} max={100} color={item.color} theme={theme} />
