@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { RECIPES, UnitSystem, convertIngredient } from "@/data/recipes";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,6 +26,7 @@ export default function RecipeDetailScreen() {
   const { toggleSaveRecipe, isRecipeSaved, addRecipeToGrocery, defaultServings, unitSystem: globalUnitSystem } = useApp();
   const isWeb = Platform.OS === "web";
   const [groceryAdded, setGroceryAdded] = useState(false);
+  const { t } = useTranslation();
 
   const recipe = RECIPES.find((r) => r.id === id);
   const [servings, setServings] = useState(recipe?.servings ?? defaultServings);
@@ -38,7 +40,7 @@ export default function RecipeDetailScreen() {
         <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: theme.card }]}>
           <Feather name="arrow-left" size={20} color={theme.text} />
         </Pressable>
-        <Text style={[styles.notFound, { color: theme.text }]}>Recipe not found</Text>
+        <Text style={[styles.notFound, { color: theme.text }]}>{t("no_recipes")}</Text>
       </View>
     );
   }
@@ -81,10 +83,10 @@ export default function RecipeDetailScreen() {
               </View>
               <View style={styles.heroBadge}>
                 <Feather name="users" size={12} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.heroBadgeText}>{recipe.servings} servings</Text>
+                <Text style={styles.heroBadgeText}>{recipe.servings} {t("servings")}</Text>
               </View>
               <View style={[styles.heroBadge, { backgroundColor: recipe.color + "BB" }]}>
-                <Text style={styles.heroBadgeText}>{recipe.difficulty}</Text>
+                <Text style={styles.heroBadgeText}>{t(recipe.difficulty as any) || recipe.difficulty}</Text>
               </View>
             </View>
           </View>
@@ -94,10 +96,10 @@ export default function RecipeDetailScreen() {
           <View style={styles.nutritionWrapper}>
             <View style={[styles.nutritionRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               {[
-                { label: "Calories", value: String(recipe.calories), unit: "kcal", color: "#FFC107" },
-                { label: "Protein", value: `${recipe.protein}g`, unit: "", color: "#4CAF50" },
-                { label: "Carbs", value: `${recipe.carbs}g`, unit: "", color: "#2196F3" },
-                { label: "Fat", value: `${recipe.fat}g`, unit: "", color: "#E91E63" },
+                { label: t("calories"), value: String(recipe.calories), unit: t("kcal"), color: "#FFC107" },
+                { label: t("protein"), value: `${recipe.protein}g`, unit: "", color: "#4CAF50" },
+                { label: t("carbs"), value: `${recipe.carbs}g`, unit: "", color: "#2196F3" },
+                { label: t("fat"), value: `${recipe.fat}g`, unit: "", color: "#E91E63" },
               ].map((n, i) => (
                 <View key={n.label} style={[styles.nutritionItem, i < 3 && { borderRightWidth: 1, borderRightColor: theme.divider }]}>
                   <Text style={[styles.nutritionValue, { color: n.color }]}>{n.value}</Text>
@@ -109,12 +111,12 @@ export default function RecipeDetailScreen() {
 
           <Text style={[styles.descText, { color: theme.subtitle }]}>{recipe.description}</Text>
 
-          <Pressable
+           <Pressable
             onPress={() => setShowCulture(!showCulture)}
             style={[styles.cultureToggle, { backgroundColor: theme.tagBg, borderColor: theme.divider }]}
           >
             <Feather name="globe" size={14} color={theme.tint} />
-            <Text style={[styles.cultureToggleLabel, { color: theme.tint }]}>Ethiopian Cultural Insight</Text>
+            <Text style={[styles.cultureToggleLabel, { color: theme.tint }]}>{t("cultural_insight")}</Text>
             <Feather name={showCulture ? "chevron-up" : "chevron-down"} size={14} color={theme.tint} style={{ marginLeft: "auto" }} />
           </Pressable>
           {showCulture && (
@@ -125,7 +127,7 @@ export default function RecipeDetailScreen() {
 
           <View style={styles.servingsSection}>
             <View style={styles.servingsLeft}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Ingredients</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("ingredients")}</Text>
               <View style={styles.servingsControl}>
                 <Pressable
                   onPress={() => setServings(Math.max(1, servings - 1))}
@@ -140,7 +142,7 @@ export default function RecipeDetailScreen() {
                 >
                   <Feather name="plus" size={14} color={theme.text} />
                 </Pressable>
-                <Text style={[styles.servingsLabel, { color: theme.muted }]}>servings</Text>
+                <Text style={[styles.servingsLabel, { color: theme.muted }]}>{t("servings")}</Text>
               </View>
             </View>
             <View style={[styles.unitToggle, { backgroundColor: theme.card, borderColor: theme.divider }]}>
@@ -183,7 +185,7 @@ export default function RecipeDetailScreen() {
             <View style={[styles.converterNote, { backgroundColor: theme.tagBg }]}>
               <Feather name="info" size={12} color={theme.tagText} />
               <Text style={[styles.converterNoteText, { color: theme.tagText }]}>
-                Amounts converted from metric to imperial units
+                {t("imperial_note")}
               </Text>
             </View>
           )}
@@ -195,7 +197,7 @@ export default function RecipeDetailScreen() {
               style={[styles.actionBtn, { backgroundColor: theme.tint }]}
             >
               <Feather name="play-circle" size={18} color="#fff" />
-              <Text style={styles.actionBtnText}>Start Cooking</Text>
+              <Text style={styles.actionBtnText}>{t("start_cooking")}</Text>
             </Pressable>
             <Pressable
               onPress={() => {
@@ -207,12 +209,12 @@ export default function RecipeDetailScreen() {
             >
               <Feather name={groceryAdded ? "check" : "shopping-cart"} size={18} color={groceryAdded ? "#fff" : theme.tint} />
               <Text style={[styles.actionBtnText, { color: groceryAdded ? "#fff" : theme.tint }]}>
-                {groceryAdded ? "Added!" : "Add to Grocery"}
+                {groceryAdded ? t("added") : t("add_to_grocery")}
               </Text>
             </Pressable>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Step-by-Step Instructions</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("instructions")}</Text>
           {recipe.steps.map((step) => (
             <Pressable
               key={step.step}
@@ -249,7 +251,7 @@ export default function RecipeDetailScreen() {
                   </>
                 )}
                 {activeStep !== step.step && (
-                  <Text style={[styles.tapHint, { color: theme.muted }]}>Tap to expand</Text>
+                  <Text style={[styles.tapHint, { color: theme.muted }]}>{t("tap_to_expand")}</Text>
                 )}
               </View>
             </Pressable>
@@ -265,7 +267,7 @@ export default function RecipeDetailScreen() {
 
           {pairRecipes.length > 0 && (
             <View>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Pairs Well With</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("pairs_well")}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4 }}>
                 {pairRecipes.map((pair) => (
                   <Pressable

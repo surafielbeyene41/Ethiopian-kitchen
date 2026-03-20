@@ -12,8 +12,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemeMode, UnitSystem, useApp } from "@/context/AppContext";
+import { ThemeMode, UnitSystem, useApp, Language } from "@/context/AppContext";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const THEME_OPTIONS: { id: ThemeMode; label: string; icon: string; emoji: string }[] = [
   { id: "system", label: "System", icon: "smartphone", emoji: "📱" },
@@ -31,17 +32,19 @@ export default function SettingsScreen() {
     themeMode, setThemeMode,
     defaultServings, setDefaultServings,
     unitSystem, setUnitSystem,
+    language, setLanguage,
     savedRecipes, groceryItems,
     clearGrocery,
   } = useApp();
+  const { t } = useTranslation();
 
   const handleClearGrocery = () => {
     Alert.alert(
-      "Clear Grocery List",
-      "Are you sure you want to remove all items from your grocery list?",
+      t("clear_list"),
+      t("clear_confirm"),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Clear All", style: "destructive", onPress: clearGrocery },
+        { text: t("cancel") || "Cancel", style: "cancel" },
+        { text: t("clear_list"), style: "destructive", onPress: clearGrocery },
       ]
     );
   };
@@ -53,18 +56,18 @@ export default function SettingsScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12 }]}>
-        <Text style={[styles.headerSub, { color: theme.tint }]}>Preferences</Text>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Settings</Text>
+        <Text style={[styles.headerSub, { color: theme.tint }]}>{t("preferences")}</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{t("settings")}</Text>
       </View>
 
       {/* Theme Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Feather name="sun" size={16} color={theme.tint} />
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Appearance</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("appearance")}</Text>
         </View>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-          <Text style={[styles.cardLabel, { color: theme.subtitle }]}>Theme Mode</Text>
+          <Text style={[styles.cardLabel, { color: theme.subtitle }]}>{t("theme_mode")}</Text>
           <View style={styles.optionsRow}>
             {THEME_OPTIONS.map((opt) => (
               <Pressable
@@ -102,10 +105,10 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Feather name="sliders" size={16} color={theme.tint} />
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Cooking Defaults</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("cooking_defaults")}</Text>
         </View>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-          <Text style={[styles.cardLabel, { color: theme.subtitle }]}>Default Servings</Text>
+          <Text style={[styles.cardLabel, { color: theme.subtitle }]}>{t("servings")}</Text>
           <View style={styles.servingsRow}>
             {SERVING_OPTIONS.map((n) => (
               <Pressable
@@ -128,7 +131,7 @@ export default function SettingsScreen() {
 
           <View style={[styles.divider, { backgroundColor: theme.divider }]} />
 
-          <Text style={[styles.cardLabel, { color: theme.subtitle }]}>Unit System</Text>
+          <Text style={[styles.cardLabel, { color: theme.subtitle }]}>{t("unit_system")}</Text>
           <View style={styles.optionsRow}>
             {(["metric", "imperial"] as UnitSystem[]).map((u) => (
               <Pressable
@@ -159,16 +162,49 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Language */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Feather name="globe" size={16} color={theme.tint} />
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("language")}</Text>
+        </View>
+        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <View style={styles.optionsRow}>
+            {(["en", "am"] as Language[]).map((l) => (
+              <Pressable
+                key={l}
+                onPress={() => setLanguage(l)}
+                style={[
+                  styles.themeOption,
+                  {
+                    backgroundColor: language === l ? theme.tint + "20" : theme.inputBg,
+                    borderColor: language === l ? theme.tint : theme.divider,
+                  },
+                ]}
+              >
+                <Text style={styles.themeEmoji}>{l === "en" ? "🇺🇸" : "🇪🇹"}</Text>
+                <Text style={[styles.themeLabel, { color: language === l ? theme.tint : theme.subtitle }]}>
+                  {l === "en" ? t("english") : t("amharic")}
+                </Text>
+                {language === l && (
+                  <View style={[styles.activeIndicator, { backgroundColor: theme.tint }]} />
+                )}
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+
       {/* Data & Storage */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Feather name="database" size={16} color={theme.tint} />
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Data & Storage</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("data_storage")}</Text>
         </View>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
           {[
-            { label: "Saved Recipes", value: String(savedRecipes.length), icon: "bookmark", color: theme.tint },
-            { label: "Grocery Items", value: String(groceryItems.length), icon: "shopping-cart", color: "#4CAF50" },
+            { label: t("saved_recipes_count"), value: String(savedRecipes.length), icon: "bookmark", color: theme.tint },
+            { label: t("grocery_items_count"), value: String(groceryItems.length), icon: "shopping-cart", color: "#4CAF50" },
           ].map((item) => (
             <View key={item.label} style={styles.dataRow}>
               <View style={[styles.dataIcon, { backgroundColor: item.color + "18" }]}>
@@ -188,7 +224,7 @@ export default function SettingsScreen() {
             style={[styles.dangerBtn, { borderColor: theme.danger + "40" }]}
           >
             <Feather name="trash-2" size={14} color={theme.danger} />
-            <Text style={[styles.dangerBtnText, { color: theme.danger }]}>Clear Grocery List</Text>
+            <Text style={[styles.dangerBtnText, { color: theme.danger }]}>{t("clear_list")}</Text>
           </Pressable>
         </View>
       </View>
@@ -197,14 +233,14 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Feather name="info" size={16} color={theme.tint} />
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>About</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("about")}</Text>
         </View>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
           <View style={styles.aboutHeader}>
             <Text style={styles.aboutEmoji}>🇪🇹</Text>
             <View>
               <Text style={[styles.aboutName, { color: theme.text }]}>Ye'Ethiopia Kitchen</Text>
-              <Text style={[styles.aboutVersion, { color: theme.muted }]}>Version 2.0.0</Text>
+              <Text style={[styles.aboutVersion, { color: theme.muted }]}>{t("version")} 2.0.0</Text>
             </View>
           </View>
           <Text style={[styles.aboutDesc, { color: theme.subtitle }]}>

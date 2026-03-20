@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { RECIPES, convertIngredient } from "@/data/recipes";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const { width } = Dimensions.get("window");
 
@@ -36,6 +37,7 @@ export default function CookingModeScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === "web";
+  const { t } = useTranslation();
 
   const recipe = RECIPES.find((r) => r.id === id);
   const steps = recipe?.steps ?? [];
@@ -112,7 +114,7 @@ export default function CookingModeScreen() {
         <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: theme.card }]}>
           <Feather name="arrow-left" size={20} color={theme.text} />
         </Pressable>
-        <Text style={[styles.notFound, { color: theme.text }]}>No steps available</Text>
+        <Text style={[styles.notFound, { color: theme.text }]}>{t("no_steps")}</Text>
       </View>
     );
   }
@@ -130,7 +132,9 @@ export default function CookingModeScreen() {
           </Pressable>
           <View style={styles.headerCenter}>
             <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>{recipe.name}</Text>
-            <Text style={[styles.headerSub, { color: theme.muted }]}>Step {currentStep + 1} of {totalSteps}</Text>
+            <Text style={[styles.headerSub, { color: theme.muted }]}>
+              {t("step_of", { current: currentStep + 1, total: totalSteps })}
+            </Text>
           </View>
           <Pressable
             onPress={() => setShowIngredients(true)}
@@ -154,7 +158,7 @@ export default function CookingModeScreen() {
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], flex: 1 }}>
           {/* Step Number Badge */}
           <View style={[styles.stepBadge, { backgroundColor: theme.tint }]}>
-            <Text style={styles.stepBadgeText}>Step {step.step}</Text>
+            <Text style={styles.stepBadgeText}>{t("step_of", { current: step.step, total: totalSteps })}</Text>
           </View>
 
           {/* Step Title */}
@@ -167,7 +171,7 @@ export default function CookingModeScreen() {
           {stepMins > 0 && (
             <View style={[styles.timerCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               <Text style={[styles.timerTitle, { color: theme.muted }]}>
-                {timerRunning ? "Timer Running" : timerSecs > 0 ? "Timer Paused" : `This step takes ~${step.duration}`}
+                {timerRunning ? t("timer_running") : timerSecs > 0 ? t("timer_paused") : `${t("prep_time")}: ~${step.duration}`}
               </Text>
               {timerSecs > 0 || timerRunning ? (
                 <View style={styles.timerDisplay}>
@@ -195,7 +199,7 @@ export default function CookingModeScreen() {
                   style={[styles.startTimerBtn, { backgroundColor: theme.tint }]}
                 >
                   <Feather name="clock" size={16} color="#fff" />
-                  <Text style={styles.startTimerText}>Start Timer</Text>
+                  <Text style={styles.startTimerText}>{t("start_timer")}</Text>
                 </Pressable>
               )}
             </View>
@@ -241,7 +245,7 @@ export default function CookingModeScreen() {
             }]}
           >
             <Feather name="chevron-left" size={22} color={theme.text} />
-            <Text style={[styles.navBtnText, { color: theme.text }]}>Previous</Text>
+            <Text style={[styles.navBtnText, { color: theme.text }]}>{t("prev_step")}</Text>
           </Pressable>
 
           {isLastStep ? (
@@ -250,14 +254,14 @@ export default function CookingModeScreen() {
               style={[styles.navBtn, { backgroundColor: theme.success, borderColor: theme.success, flex: 1.5 }]}
             >
               <Feather name="check-circle" size={20} color="#fff" />
-              <Text style={[styles.navBtnText, { color: "#fff" }]}>Done Cooking!</Text>
+              <Text style={[styles.navBtnText, { color: "#fff" }]}>{t("done_cooking")}</Text>
             </Pressable>
           ) : (
             <Pressable
               onPress={goNext}
               style={[styles.navBtn, { backgroundColor: theme.tint, borderColor: theme.tint, flex: 1.5 }]}
             >
-              <Text style={[styles.navBtnText, { color: "#fff" }]}>Next Step</Text>
+              <Text style={[styles.navBtnText, { color: "#fff" }]}>{t("next_step")}</Text>
               <Feather name="chevron-right" size={22} color="#fff" />
             </Pressable>
           )}
@@ -271,7 +275,7 @@ export default function CookingModeScreen() {
           <View style={[styles.ingredientSheet, { backgroundColor: theme.background, borderColor: theme.cardBorder }]}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
-              <Text style={[styles.sheetTitle, { color: theme.text }]}>Ingredients</Text>
+              <Text style={[styles.sheetTitle, { color: theme.text }]}>{t("ingredients")}</Text>
               <Pressable onPress={() => setShowIngredients(false)}>
                 <Feather name="x" size={20} color={theme.muted} />
               </Pressable>
@@ -297,15 +301,15 @@ export default function CookingModeScreen() {
             <View style={[styles.successIcon, { backgroundColor: theme.success + "20" }]}>
               <Feather name="check-circle" size={60} color={theme.success} />
             </View>
-            <Text style={[styles.completionTitle, { color: theme.text }]}>Recipe Complete!</Text>
+            <Text style={[styles.completionTitle, { color: theme.text }]}>{t("recipe_complete")}</Text>
             <Text style={[styles.completionSub, { color: theme.subtitle }]}>
-              You've successfully cooked {recipe.name}. Enjoy your authentic Ethiopian meal!
+              {t("recipe_complete_desc", { name: recipe.name })}
             </Text>
             <Pressable
               onPress={() => router.back()}
               style={[styles.doneBtn, { backgroundColor: theme.tint }]}
             >
-              <Text style={styles.doneBtnText}>Back to Recipe</Text>
+              <Text style={styles.doneBtnText}>{t("back_to_recipe")}</Text>
             </Pressable>
           </View>
         </View>

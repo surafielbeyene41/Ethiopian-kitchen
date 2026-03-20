@@ -18,13 +18,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { EXERCISES, MEAL_PLANS } from "@/data/fitness";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const EXERCISE_CATS = [
-  { id: "all", label: "All", icon: "grid" },
-  { id: "cardio", label: "Cardio", icon: "activity" },
-  { id: "strength", label: "Strength", icon: "zap" },
-  { id: "traditional", label: "Traditional", icon: "music" },
-  { id: "flexibility", label: "Flex", icon: "wind" },
+  { id: "all", label: "all", icon: "grid" },
+  { id: "cardio", label: "cardio", icon: "activity" },
+  { id: "strength", label: "strength", icon: "zap" },
+  { id: "traditional", label: "traditional", icon: "music" },
+  { id: "flexibility", label: "flexibility", icon: "wind" },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -35,10 +36,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const GOAL_META: Record<string, { bg: string; emoji: string; label: string }> = {
-  "weight-loss": { bg: "#C62828", emoji: "🔥", label: "Weight Loss" },
-  "muscle-gain": { bg: "#1565C0", emoji: "💪", label: "Muscle Gain" },
-  maintenance: { bg: "#2E7D32", emoji: "⚖️", label: "Maintenance" },
-  fasting: { bg: "#6A1B9A", emoji: "🙏", label: "Fasting" },
+  "weight-loss": { bg: "#C62828", emoji: "🔥", label: "weight_loss" },
+  "muscle-gain": { bg: "#1565C0", emoji: "💪", label: "muscle_gain" },
+  maintenance: { bg: "#2E7D32", emoji: "⚖️", label: "maintenance" },
+  fasting: { bg: "#6A1B9A", emoji: "🙏", label: "fasting" },
 };
 
 const MEAL_TIME_COLORS: Record<string, string> = {
@@ -51,6 +52,7 @@ const MEAL_TIME_COLORS: Record<string, string> = {
 function ExerciseCard({ exercise, theme, onLog, justLogged }: {
   exercise: typeof EXERCISES[0]; theme: any; onLog: () => void; justLogged: boolean;
 }) {
+  const { t } = useTranslation();
   const catColor = "#FFC107";
   const levelColors: Record<string, string> = { beginner: "#4CAF50", intermediate: "#FF9800", advanced: "#F44336" };
 
@@ -79,7 +81,9 @@ function ExerciseCard({ exercise, theme, onLog, justLogged }: {
               <Text style={[styles.exName, { color: theme.text }]} numberOfLines={1}>{exercise.name}</Text>
             </View>
             <View style={[styles.levelBadge, { backgroundColor: levelColors[exercise.level] + "20" }]}>
-              <Text style={[styles.levelText, { color: levelColors[exercise.level] }]}>{exercise.level}</Text>
+              <Text style={[styles.levelText, { color: levelColors[exercise.level] }]}>
+                {(exercise.level as string).charAt(0).toUpperCase() + exercise.level.slice(1)}
+              </Text>
             </View>
           </View>
 
@@ -125,6 +129,7 @@ function ExerciseCard({ exercise, theme, onLog, justLogged }: {
 }
 
 function MealPlanCard({ plan, theme }: { plan: typeof MEAL_PLANS[0]; theme: any }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const meta = GOAL_META[plan.goal];
 
@@ -137,7 +142,7 @@ function MealPlanCard({ plan, theme }: { plan: typeof MEAL_PLANS[0]; theme: any 
         <View style={{ flex: 1 }}>
           <View style={styles.mealTagRow}>
             <View style={[styles.mealGoalTag, { backgroundColor: meta.bg }]}>
-              <Text style={styles.mealGoalText}>{meta.emoji} {meta.label}</Text>
+              <Text style={styles.mealGoalText}>{meta.emoji} {t(meta.label as any)}</Text>
             </View>
           </View>
           <Text style={[styles.mealName, { color: theme.text }]}>{plan.name}</Text>
@@ -145,7 +150,7 @@ function MealPlanCard({ plan, theme }: { plan: typeof MEAL_PLANS[0]; theme: any 
         </View>
         <View style={styles.mealKcalBlock}>
           <Text style={[styles.mealKcalNum, { color: theme.tint }]}>{plan.totalCalories}</Text>
-          <Text style={[styles.mealKcalUnit, { color: theme.muted }]}>kcal/day</Text>
+          <Text style={[styles.mealKcalUnit, { color: theme.muted }]}>{t("kcal_day")}</Text>
         </View>
       </View>
 
@@ -156,10 +161,10 @@ function MealPlanCard({ plan, theme }: { plan: typeof MEAL_PLANS[0]; theme: any 
             { p: 0, c: 0, f: 0 }
           );
           return [
-            { label: "Protein", val: `${totals.p}g`, color: "#1565C0" },
-            { label: "Carbs", val: `${totals.c}g`, color: "#E65100" },
-            { label: "Fat", val: `${totals.f}g`, color: "#6A1B9A" },
-            { label: "Meals", val: String(plan.meals.length), color: theme.tint },
+            { label: t("protein"), val: `${totals.p}g`, color: "#1565C0" },
+            { label: t("carbs"), val: `${totals.c}g`, color: "#E65100" },
+            { label: t("fat"), val: `${totals.f}g`, color: "#6A1B9A" },
+            { label: t("recipes"), val: String(plan.meals.length), color: theme.tint },
           ].map((m, i) => (
             <View key={m.label} style={[styles.mealMacroItem, i < 3 && { borderRightWidth: 1, borderRightColor: theme.divider }]}>
               <Text style={[styles.mealMacroVal, { color: m.color }]}>{m.val}</Text>
@@ -175,7 +180,7 @@ function MealPlanCard({ plan, theme }: { plan: typeof MEAL_PLANS[0]; theme: any 
             <View key={meal.time} style={[styles.mealRow, { borderBottomColor: theme.divider }]}>
               <View style={[styles.mealTimeBadge, { backgroundColor: MEAL_TIME_COLORS[meal.time] + "20" }]}>
                 <Text style={[styles.mealTimeText, { color: MEAL_TIME_COLORS[meal.time] }]}>
-                  {meal.time.charAt(0).toUpperCase() + meal.time.slice(1)}
+                  {t(meal.time as any)}
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -195,7 +200,7 @@ function MealPlanCard({ plan, theme }: { plan: typeof MEAL_PLANS[0]; theme: any 
       <View style={styles.expandRow}>
         <Feather name={expanded ? "chevron-up" : "chevron-down"} size={14} color={theme.muted} />
         <Text style={[styles.expandText, { color: theme.muted }]}>
-          {expanded ? "Collapse" : `View ${plan.meals.length} meals`}
+          {expanded ? t("collapse") : t("view_meals", { count: plan.meals.length })}
         </Text>
       </View>
     </Pressable>
@@ -211,6 +216,7 @@ export default function FitnessScreen() {
   const [search, setSearch] = useState("");
   const [loggedIds, setLoggedIds] = useState<Record<string, boolean>>({});
   const isWeb = Platform.OS === "web";
+  const { t } = useTranslation();
 
   const filtered = useMemo(() =>
     EXERCISES.filter((e) =>
@@ -239,31 +245,31 @@ export default function FitnessScreen() {
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12, backgroundColor: theme.background }]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={[styles.headerSub, { color: theme.subtitle }]}>Ethiopian-Inspired</Text>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>Fitness</Text>
+            <Text style={[styles.headerSub, { color: theme.subtitle }]}>{t("fitness_sub")}</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>{t("fitness_title")}</Text>
           </View>
           <View style={styles.headerStats}>
             <View style={[styles.statPill, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               <Feather name="zap" size={12} color="#E65100" />
-              <Text style={[styles.statPillText, { color: "#E65100" }]}>{todayCaloriesBurned} kcal</Text>
+              <Text style={[styles.statPillText, { color: "#E65100" }]}>{todayCaloriesBurned} {t("kcal_burned")}</Text>
             </View>
             <View style={[styles.statPill, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               <Feather name="check-circle" size={12} color="#2E7D32" />
-              <Text style={[styles.statPillText, { color: "#2E7D32" }]}>{todayWorkouts.length} done</Text>
+              <Text style={[styles.statPillText, { color: "#2E7D32" }]}>{todayWorkouts.length} {t("workouts_done")}</Text>
             </View>
           </View>
         </View>
 
         <View style={[styles.tabSeg, { backgroundColor: theme.card, borderColor: theme.divider }]}>
-          {(["exercises", "meals"] as const).map((t) => (
+          {(["exercises", "meals"] as const).map((tabItem) => (
             <Pressable
-              key={t}
-              onPress={() => setTab(t)}
-              style={[styles.tabSegBtn, tab === t && { backgroundColor: theme.tint }]}
+              key={tabItem}
+              onPress={() => setTab(tabItem)}
+              style={[styles.tabSegBtn, tab === tabItem && { backgroundColor: theme.tint }]}
             >
-              <Feather name={t === "exercises" ? "activity" : "coffee"} size={14} color={tab === t ? "#fff" : theme.subtitle} />
-              <Text style={[styles.tabSegText, { color: tab === t ? "#fff" : theme.subtitle }]}>
-                {t === "exercises" ? "Exercises" : "Meal Plans"}
+              <Feather name={tabItem === "exercises" ? "activity" : "coffee"} size={14} color={tab === tabItem ? "#fff" : theme.subtitle} />
+              <Text style={[styles.tabSegText, { color: tab === tabItem ? "#fff" : theme.subtitle }]}>
+                {tabItem === "exercises" ? t("exercises") : t("meal_plans")}
               </Text>
             </Pressable>
           ))}
@@ -274,7 +280,7 @@ export default function FitnessScreen() {
             <View style={[styles.searchBar, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
               <Feather name="search" size={15} color={theme.muted} />
               <TextInput
-                placeholder="Search by name or muscle group..."
+                placeholder={t("search_muscle")}
                 placeholderTextColor={theme.muted}
                 value={search}
                 onChangeText={setSearch}
@@ -299,7 +305,7 @@ export default function FitnessScreen() {
                     ]}
                   >
                     <Feather name={cat.icon as any} size={12} color={category === cat.id ? "#fff" : theme.subtitle} />
-                    <Text style={[styles.pillText, { color: category === cat.id ? "#fff" : theme.subtitle }]}>{cat.label}</Text>
+                    <Text style={[styles.pillText, { color: category === cat.id ? "#fff" : theme.subtitle }]}>{t(cat.label as any)}</Text>
                     <View style={[styles.pillCount, { backgroundColor: category === cat.id ? "rgba(255,255,255,0.25)" : theme.inputBg }]}>
                       <Text style={[styles.pillCountText, { color: category === cat.id ? "#fff" : theme.muted }]}>{count}</Text>
                     </View>
@@ -320,14 +326,14 @@ export default function FitnessScreen() {
           ListHeaderComponent={
             <View style={[styles.summaryBanner, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               <View>
-                <Text style={[styles.summaryTitle, { color: theme.text }]}>{filtered.length} exercises</Text>
+                <Text style={[styles.summaryTitle, { color: theme.text }]}>{filtered.length} {t("exercises")}</Text>
                 <Text style={[styles.summarySubtitle, { color: theme.muted }]}>
-                  {filtered.reduce((s, e) => s + e.calories, 0)} kcal potential burn
+                  {t("kcal_potential", { count: filtered.reduce((s, e) => s + e.calories, 0) })}
                 </Text>
               </View>
               <View style={[styles.summaryRight, { backgroundColor: theme.tint + "15" }]}>
                 <Feather name="trending-up" size={16} color={theme.tint} />
-                <Text style={[styles.summaryTipText, { color: theme.tint }]}>Tap to start timer</Text>
+                <Text style={[styles.summaryTipText, { color: theme.tint }]}>{t("start_timer_hint")}</Text>
               </View>
             </View>
           }
@@ -343,9 +349,9 @@ export default function FitnessScreen() {
           ListEmptyComponent={() => (
             <View style={styles.emptyBox}>
               <Feather name="search" size={36} color={theme.muted} />
-              <Text style={[styles.emptyText, { color: theme.muted }]}>No exercises found</Text>
+              <Text style={[styles.emptyText, { color: theme.muted }]}>{t("no_exercises")}</Text>
               <Pressable onPress={() => { setSearch(""); setCategory("all"); }}>
-                <Text style={[styles.clearText, { color: theme.tint }]}>Clear filters</Text>
+                <Text style={[styles.clearText, { color: theme.tint }]}>{t("clear_filters")}</Text>
               </Pressable>
             </View>
           )}

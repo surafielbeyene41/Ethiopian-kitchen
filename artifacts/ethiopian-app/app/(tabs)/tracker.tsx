@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { STEP_GOAL, WATER_GOAL_ML } from "@/data/fitness";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const WATER_QUICK = [150, 200, 350, 500];
 const STEPS_QUICK = [500, 1000, 2500, 5000];
@@ -128,12 +129,14 @@ export default function TrackerScreen() {
     if (!h || !w || h <= 0) return null;
     const bmi = w / (h * h);
     let cat = "", color = "";
-    if (bmi < 18.5) { cat = "Underweight"; color = "#1565C0"; }
-    else if (bmi < 25) { cat = "Healthy Weight"; color = "#2E7D32"; }
-    else if (bmi < 30) { cat = "Overweight"; color = "#E65100"; }
-    else { cat = "Obese"; color = "#C62828"; }
+    if (bmi < 18.5) { cat = "underweight"; color = "#1565C0"; }
+    else if (bmi < 25) { cat = "healthy_weight"; color = "#2E7D32"; }
+    else if (bmi < 30) { cat = "overweight"; color = "#E65100"; }
+    else { cat = "obese"; color = "#C62828"; }
     return { bmi: bmi.toFixed(1), cat, color };
   })();
+
+  const { t, language } = useTranslation();
 
   return (
     <ScrollView
@@ -142,27 +145,27 @@ export default function TrackerScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12 }]}>
-        <Text style={[styles.headerSub, { color: theme.subtitle }]}>Daily Overview</Text>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Tracker</Text>
+        <Text style={[styles.headerSub, { color: theme.subtitle }]}>{t("daily_overview")}</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{t("tracker_title")}</Text>
 
         <View style={[styles.dateStrip, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
           <Feather name="calendar" size={13} color={theme.tint} />
           <Text style={[styles.dateText, { color: theme.text }]}>
-            {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            {today.toLocaleDateString(language === "am" ? "am-ET" : "en-US", { weekday: "long", month: "long", day: "numeric" })}
           </Text>
         </View>
       </View>
 
       <View style={styles.ringsRow}>
         {[
-          { label: "Water", value: `${todayWater}ml`, pct: waterPct, color: "#2196F3" },
-          { label: "Steps", value: todaySteps.toLocaleString(), pct: stepsPct, color: "#4CAF50" },
-          { label: "Burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#FF9800" },
+          { label: "water", value: `${todayWater}ml`, pct: waterPct, color: "#2196F3" },
+          { label: "steps", value: todaySteps.toLocaleString(), pct: stepsPct, color: "#4CAF50" },
+          { label: "burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#FF9800" },
         ].map((r) => (
           <View key={r.label} style={styles.ringCardWrapper}>
             <View style={[styles.ringCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <SummaryRing pct={r.pct} color={r.color} label={r.label} value={r.value} />
-              <Text style={[styles.ringCardLabel, { color: theme.muted }]}>{r.label}</Text>
+              <SummaryRing pct={r.pct} color={r.color} label={t(r.label as any)} value={r.value} />
+              <Text style={[styles.ringCardLabel, { color: theme.muted }]}>{t(r.label as any)}</Text>
             </View>
           </View>
         ))}
@@ -170,14 +173,14 @@ export default function TrackerScreen() {
 
       <View style={styles.tabsRow}>
         {([
-          { id: "summary", label: "Summary", icon: "bar-chart-2" },
-          { id: "water", label: "Water", icon: "droplet" },
-          { id: "steps", label: "Steps", icon: "navigation" },
-          { id: "bmi", label: "BMI", icon: "user" },
-        ] as { id: ActiveTab; label: string; icon: string }[]).map((t) => (
+          { id: "summary", label: "summary", icon: "bar-chart-2" },
+          { id: "water", label: "water", icon: "droplet" },
+          { id: "steps", label: "steps", icon: "navigation" },
+          { id: "bmi", label: "bmi", icon: "user" },
+        ] as { id: ActiveTab; label: string; icon: string }[]).map((tItem) => (
           <Pressable
-            key={t.id}
-            onPress={() => setActiveTab(t.id)}
+            key={tItem.id}
+            onPress={() => setActiveTab(tItem.id)}
             style={[
               styles.tabBtn,
               {
@@ -186,8 +189,8 @@ export default function TrackerScreen() {
               },
             ]}
           >
-            <Feather name={t.icon as any} size={14} color={activeTab === t.id ? "#000" : "rgba(255,255,255,0.5)"} />
-            <Text style={[styles.tabBtnText, { color: activeTab === t.id ? "#000" : "rgba(255,255,255,0.5)" }]}>{t.label}</Text>
+            <Feather name={tItem.icon as any} size={14} color={activeTab === tItem.id ? "#000" : "rgba(255,255,255,0.5)"} />
+            <Text style={[styles.tabBtnText, { color: activeTab === tItem.id ? "#000" : "rgba(255,255,255,0.5)" }]}>{t(tItem.label as any)}</Text>
           </Pressable>
         ))}
       </View>
@@ -196,11 +199,11 @@ export default function TrackerScreen() {
         {activeTab === "summary" && (
           <View style={{ gap: 16 }}>
             <View style={styles.card}>
-              <Text style={[styles.cardTitle, { color: theme.text }]}>Today at a Glance</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>{t("today_glance")}</Text>
               {[
-                { label: "Water Intake", value: `${todayWater} / ${WATER_GOAL_ML} ml`, pct: waterPct, color: "#2196F3", icon: "droplet" },
-                { label: "Steps", value: `${todaySteps.toLocaleString()} / ${STEP_GOAL.toLocaleString()}`, pct: stepsPct, color: "#4CAF50", icon: "navigation" },
-                { label: "Calories Burned", value: `${todayCaloriesBurned} / 500 kcal`, pct: calPct, color: "#FF9800", icon: "zap" },
+                { label: t("water_intake"), value: `${todayWater} / ${WATER_GOAL_ML} ml`, pct: waterPct, color: "#2196F3", icon: "droplet" },
+                { label: t("steps"), value: `${todaySteps.toLocaleString()} / ${STEP_GOAL.toLocaleString()}`, pct: stepsPct, color: "#4CAF50", icon: "navigation" },
+                { label: t("burned"), value: `${todayCaloriesBurned} / 500 kcal`, pct: calPct, color: "#FF9800", icon: "zap" },
               ].map((item) => (
                 <View key={item.label} style={styles.glanceRow}>
                   <View style={[styles.glanceIcon, { backgroundColor: item.color + "20" }]}>
@@ -220,32 +223,32 @@ export default function TrackerScreen() {
             <Text style={[styles.sectionTitle, { color: theme.text }]}>This Week</Text>
 
             <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Text style={[styles.cardTitle, { color: "#1565C0" }]}>💧 Water (ml)</Text>
+              <Text style={[styles.cardTitle, { color: "#1565C0" }]}>💧 {t("water")} (ml)</Text>
               <WeekChart data={weekData.map((d) => d.water)} max={WATER_GOAL_ML} color="#1565C0" labels={dayNames} />
               <Text style={[styles.chartAvg, { color: theme.muted }]}>
-                Weekly avg: {Math.round(weekData.reduce((s, d) => s + d.water, 0) / 7)} ml/day
+                {t("weekly_avg_water", { val: Math.round(weekData.reduce((s, d) => s + d.water, 0) / 7) })}
               </Text>
             </View>
 
             <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Text style={[styles.cardTitle, { color: "#2E7D32" }]}>👟 Steps</Text>
+              <Text style={[styles.cardTitle, { color: "#2E7D32" }]}>👟 {t("steps")}</Text>
               <WeekChart data={weekData.map((d) => d.steps)} max={STEP_GOAL} color="#2E7D32" labels={dayNames} />
               <Text style={[styles.chartAvg, { color: theme.muted }]}>
-                Weekly avg: {Math.round(weekData.reduce((s, d) => s + d.steps, 0) / 7).toLocaleString()} steps/day
+                {t("weekly_avg_steps", { val: Math.round(weekData.reduce((s, d) => s + d.steps, 0) / 7).toLocaleString() })}
               </Text>
             </View>
 
             <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Text style={[styles.cardTitle, { color: "#E65100" }]}>🔥 Calories Burned</Text>
+              <Text style={[styles.cardTitle, { color: "#E65100" }]}>🔥 {t("burned")}</Text>
               <WeekChart data={weekData.map((d) => d.calories)} max={500} color="#E65100" labels={dayNames} />
               <Text style={[styles.chartAvg, { color: theme.muted }]}>
-                Weekly total: {weekData.reduce((s, d) => s + d.calories, 0)} kcal
+                {t("weekly_total_kcal", { val: weekData.reduce((s, d) => s + d.calories, 0) })}
               </Text>
             </View>
 
             {todayWorkouts.length > 0 && (
               <View>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Today's Workouts</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("workouts_today")}</Text>
                 {todayWorkouts.map((w) => (
                   <View key={w.id} style={[styles.workoutRow, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
                     <View style={[styles.workoutIcon, { backgroundColor: theme.tint + "20" }]}>
@@ -272,11 +275,11 @@ export default function TrackerScreen() {
                 </View>
                 <View>
                   <Text style={[styles.mainStatVal, { color: "#1565C0" }]}>{todayWater} ml</Text>
-                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>of {WATER_GOAL_ML} ml goal · {waterPct}%</Text>
+                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>{t("results_count", { count: WATER_GOAL_ML, plural: "" })} ml goal · {waterPct}%</Text>
                 </View>
               </View>
               <ProgressBar value={todayWater} max={WATER_GOAL_ML} color="#1565C0" theme={theme} />
-              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Quick Add</Text>
+              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>{t("quick_add")}</Text>
               <View style={styles.quickRow}>
                 {WATER_QUICK.map((ml) => (
                   <Pressable
@@ -291,11 +294,11 @@ export default function TrackerScreen() {
               </View>
             </View>
 
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Today's Log</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("today_log")}</Text>
             {waterEntries.filter((e) => e.date === todayStr).length === 0 ? (
               <View style={[styles.emptyBox, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
                 <Feather name="droplet" size={28} color={theme.muted} />
-                <Text style={[styles.emptyText, { color: theme.muted }]}>No water logged today</Text>
+                <Text style={[styles.emptyText, { color: theme.muted }]}>{t("no_water_logged")}</Text>
               </View>
             ) : (
               waterEntries.filter((e) => e.date === todayStr).map((e) => (
@@ -318,12 +321,12 @@ export default function TrackerScreen() {
                 </View>
                 <View>
                   <Text style={[styles.mainStatVal, { color: "#2E7D32" }]}>{todaySteps.toLocaleString()}</Text>
-                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>of {STEP_GOAL.toLocaleString()} goal · {stepsPct}%</Text>
+                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>{t("results_count", { count: STEP_GOAL, plural: "" })} goal · {stepsPct}%</Text>
                 </View>
               </View>
               <ProgressBar value={todaySteps} max={STEP_GOAL} color="#2E7D32" theme={theme} />
 
-              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Quick Add Steps</Text>
+              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>{t("quick_add_steps")}</Text>
               <View style={styles.quickRow}>
                 {STEPS_QUICK.map((s) => (
                   <Pressable
@@ -337,7 +340,7 @@ export default function TrackerScreen() {
                 ))}
               </View>
 
-              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>Set Exact Steps</Text>
+              <Text style={[styles.quickLabel, { color: theme.subtitle }]}>{t("set_exact_steps")}</Text>
               <View style={styles.stepsInputRow}>
                 <Pressable
                   onPress={() => { const v = Math.max(0, (parseInt(stepsInput) || 0) - 100); setStepsInput(String(v)); updateSteps(v); }}
@@ -366,7 +369,7 @@ export default function TrackerScreen() {
               <View style={[styles.calorieEstimate, { backgroundColor: theme.inputBg }]}>
                 <Feather name="zap" size={14} color="#E65100" />
                 <Text style={[styles.calorieEstimateText, { color: theme.text }]}>
-                  Estimated burn from steps: <Text style={{ color: "#E65100", fontFamily: "Inter_700Bold" }}>{Math.round(todaySteps * 0.04)} kcal</Text>
+                  {t("est_burn_steps", { val: Math.round(todaySteps * 0.04) })}
                 </Text>
               </View>
             </View>
@@ -378,15 +381,15 @@ export default function TrackerScreen() {
             <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
               <View style={styles.bmiHeader}>
                 <Feather name="user" size={20} color={theme.tint} />
-                <Text style={[styles.cardTitle, { color: theme.text }]}>BMI Calculator</Text>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>{t("bmi_calc")}</Text>
               </View>
               <Text style={[styles.bmiSubtext, { color: theme.subtitle }]}>
-                Body Mass Index — a general indicator of healthy weight for your height
+                {t("bmi_desc")}
               </Text>
 
               <View style={styles.bmiInputsRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.bmiInputLabel, { color: theme.subtitle }]}>Height (cm)</Text>
+                  <Text style={[styles.bmiInputLabel, { color: theme.subtitle }]}>{t("height_cm")}</Text>
                   <TextInput
                     value={bmiHeight}
                     onChangeText={setBmiHeight}
@@ -397,7 +400,7 @@ export default function TrackerScreen() {
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.bmiInputLabel, { color: theme.subtitle }]}>Weight (kg)</Text>
+                  <Text style={[styles.bmiInputLabel, { color: theme.subtitle }]}>{t("weight_kg")}</Text>
                   <TextInput
                     value={bmiWeight}
                     onChangeText={setBmiWeight}
@@ -411,19 +414,19 @@ export default function TrackerScreen() {
 
               {bmiResult && (
                 <View style={[styles.bmiResult, { backgroundColor: bmiResult.color + "10", borderColor: bmiResult.color + "30" }]}>
-                  <Text style={[styles.bmiScore, { color: bmiResult.color }]}>BMI: {bmiResult.bmi}</Text>
-                  <Text style={[styles.bmiCat, { color: bmiResult.color }]}>{bmiResult.cat}</Text>
+                  <Text style={[styles.bmiScore, { color: bmiResult.color }]}>{t("bmi_score_label", { score: bmiResult.bmi })}</Text>
+                  <Text style={[styles.bmiCat, { color: bmiResult.color }]}>{t(bmiResult.cat as any)}</Text>
                 </View>
               )}
             </View>
 
             <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Text style={[styles.cardTitle, { color: theme.text }]}>BMI Reference Scale</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>{t("bmi_scale")}</Text>
               {[
-                { range: "Below 18.5", cat: "Underweight", color: "#1565C0" },
-                { range: "18.5 – 24.9", cat: "Healthy Weight ✓", color: "#2E7D32" },
-                { range: "25.0 – 29.9", cat: "Overweight", color: "#E65100" },
-                { range: "30.0 and above", cat: "Obese", color: "#C62828" },
+                { range: "Below 18.5", cat: t("underweight"), color: "#1565C0" },
+                { range: "18.5 – 24.9", cat: t("healthy_weight"), color: "#2E7D32" },
+                { range: "25.0 – 29.9", cat: t("overweight"), color: "#E65100" },
+                { range: "30.0 and above", cat: t("obese"), color: "#C62828" },
               ].map((r) => (
                 <View key={r.range} style={styles.bmiScaleRow}>
                   <View style={[styles.bmiScaleDot, { backgroundColor: r.color }]} />
@@ -432,7 +435,7 @@ export default function TrackerScreen() {
                 </View>
               ))}
               <Text style={[styles.bmiDisclaimer, { color: theme.muted }]}>
-                * BMI is a screening tool, not a diagnostic measure. Consult a healthcare professional for a complete assessment.
+                {t("bmi_disclaimer")}
               </Text>
             </View>
           </View>

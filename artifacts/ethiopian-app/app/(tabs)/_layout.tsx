@@ -7,29 +7,31 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import Colors from "@/constants/colors";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function NativeTabLayout() {
+  const { t } = useTranslation();
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "fork.knife", selected: "fork.knife" }} />
-        <Label>Recipes</Label>
+        <Label>{t("recipes")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="fitness">
         <Icon sf={{ default: "figure.run", selected: "figure.run.circle.fill" }} />
-        <Label>Fitness</Label>
+        <Label>{t("fitness")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="tracker">
         <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
-        <Label>Tracker</Label>
+        <Label>{t("tracker")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="saved">
         <Icon sf={{ default: "bookmark", selected: "bookmark.fill" }} />
-        <Label>Saved</Label>
+        <Label>{t("saved")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <Label>Settings</Label>
+        <Label>{t("settings")}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -41,6 +43,7 @@ function ClassicTabLayout() {
   const theme = isDark ? Colors.dark : Colors.light;
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -73,7 +76,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Recipes",
+          title: t("recipes"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="fork.knife" tintColor={color} size={22} />
@@ -85,7 +88,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="fitness"
         options={{
-          title: "Fitness",
+          title: t("fitness"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="figure.run" tintColor={color} size={22} />
@@ -97,7 +100,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="tracker"
         options={{
-          title: "Tracker",
+          title: t("tracker"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="chart.bar.fill" tintColor={color} size={22} />
@@ -109,7 +112,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="saved"
         options={{
-          title: "Saved",
+          title: t("saved"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="bookmark.fill" tintColor={color} size={22} />
@@ -121,7 +124,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("settings"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="gearshape.fill" tintColor={color} size={22} />

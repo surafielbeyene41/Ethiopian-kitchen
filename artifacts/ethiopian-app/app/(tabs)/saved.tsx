@@ -18,11 +18,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { RECIPES } from "@/data/recipes";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const SORT_OPTIONS = [
-  { id: "recent", label: "Recently Saved" },
-  { id: "time", label: "Quickest" },
-  { id: "calories", label: "Lowest Calorie" },
+  { id: "recent", label: "recently_saved" },
+  { id: "time", label: "quickest" },
+  { id: "calories", label: "lowest_calorie" },
 ];
 
 export default function SavedScreen() {
@@ -32,6 +33,7 @@ export default function SavedScreen() {
   const [sortId, setSortId] = useState("recent");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const isWeb = Platform.OS === "web";
+  const { t } = useTranslation();
 
   const savedList = savedRecipes
     .map((sr) => ({ ...sr, recipe: RECIPES.find((r) => r.id === sr.recipeId) }))
@@ -48,23 +50,23 @@ export default function SavedScreen() {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12 }]}>
-          <Text style={[styles.headerSub, { color: theme.subtitle }]}>Your Collection</Text>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Saved</Text>
+          <Text style={[styles.headerSub, { color: theme.subtitle }]}>{t("your_collection")}</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t("saved_title")}</Text>
         </View>
         <View style={styles.emptyState}>
           <View style={[styles.emptyIconBox, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
             <Feather name="bookmark" size={40} color={theme.muted} />
           </View>
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>Nothing saved yet</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>{t("nothing_saved")}</Text>
           <Text style={[styles.emptySub, { color: theme.muted }]}>
-            Tap the bookmark on any recipe to save it for later
+            {t("save_later_hint")}
           </Text>
           <Pressable
             onPress={() => router.push("/(tabs)/")}
             style={[styles.exploreBtn, { backgroundColor: theme.tint }]}
           >
             <Feather name="book-open" size={16} color="#fff" />
-            <Text style={styles.exploreBtnText}>Explore Recipes</Text>
+            <Text style={styles.exploreBtnText}>{t("explore_recipes")}</Text>
           </Pressable>
         </View>
       </View>
@@ -76,8 +78,8 @@ export default function SavedScreen() {
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 16 }]}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={[styles.headerSub, { color: theme.subtitle }]}>YOUR COLLECTION</Text>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>Saved Recipes</Text>
+            <Text style={[styles.headerSub, { color: theme.subtitle }]}>{t("your_collection").toUpperCase()}</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>{t("saved_recipes")}</Text>
           </View>
           <View style={styles.headerActions}>
             <Pressable
@@ -92,9 +94,9 @@ export default function SavedScreen() {
         <View style={[styles.statsBanner, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
           <View style={styles.statsBannerBlur}>
             {[
-              { label: "Saved", value: String(sorted.length), icon: "bookmark", color: theme.tint },
-              { label: "Avg Time", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.time, 0) / sorted.length)}m`, icon: "clock", color: theme.tint },
-              { label: "Avg Kcal", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.calories, 0) / sorted.length)}`, icon: "zap", color: theme.tint },
+              { label: t("saved"), value: String(sorted.length), icon: "bookmark", color: theme.tint },
+              { label: t("avg_time"), value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.time, 0) / sorted.length)}m`, icon: "clock", color: theme.tint },
+              { label: t("avg_kcal"), value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.calories, 0) / sorted.length)}`, icon: "zap", color: theme.tint },
             ].map((s, i) => (
               <View key={s.label} style={[styles.statItem, i < 2 && { borderRightWidth: 1, borderRightColor: theme.divider }]}>
                 <Feather name={s.icon as any} size={14} color={s.color} />
@@ -118,7 +120,7 @@ export default function SavedScreen() {
                 },
               ]}
             >
-              <Text style={[styles.sortPillText, { color: sortId === opt.id ? "#FFFFFF" : theme.muted }]}>{opt.label}</Text>
+              <Text style={[styles.sortPillText, { color: sortId === opt.id ? "#FFFFFF" : theme.muted }]}>{t(opt.label as any)}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -208,7 +210,7 @@ export default function SavedScreen() {
                   </View>
                   <View style={styles.listMetaItem}>
                     <Feather name="heart" size={11} color={theme.muted} />
-                    <Text style={[styles.listMetaText, { color: theme.muted }]}>{s.recipe.protein}g protein</Text>
+                    <Text style={[styles.listMetaText, { color: theme.muted }]}>{t("protein_g", { count: s.recipe.protein })}</Text>
                   </View>
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>

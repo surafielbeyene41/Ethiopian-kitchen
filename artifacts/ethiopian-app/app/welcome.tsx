@@ -15,6 +15,8 @@ import {
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useApp } from "@/context/AppContext";
 
 import { RECIPES } from "@/data/recipes";
 
@@ -25,27 +27,27 @@ const { width, height } = Dimensions.get("window");
 const ONBOARDING_PAGES = [
   {
     emoji: "🍽️",
-    title: "Authentic\nEthiopian Kitchen",
-    amharic: "የኢትዮጵያ ምግብ ቤት",
-    description: "Explore 100+ traditional recipes with step-by-step instructions, cultural insights, and smart ingredient converters.",
+    titleKey: "welcome_title",
+    amharicKey: "authentic",
+    descriptionKey: "welcome_desc",
     accent: "#FFC107",
-    features: ["Real food photos", "Amharic names", "Unit converter", "Cultural stories"],
+    featuresKeys: ["feat_photos", "feat_amharic", "feat_converter", "feat_stories"],
   },
   {
     emoji: "🏃",
-    title: "Ethiopian\nFitness & Wellness",
-    amharic: "ጤና እና ስፖርት",
-    description: "Ethiopian-inspired workouts with a live timer, step-by-step guides, and culturally connected meal plans.",
+    titleKey: "fitness_title",
+    amharicKey: "fitness_sub",
+    descriptionKey: "fitness_sub",
     accent: "#4CAF50",
-    features: ["Live workout timer", "Exercise instructions", "Muscle groups", "Meal plans"],
+    featuresKeys: ["feat_timer", "feat_guide", "feat_muscles", "feat_plans"],
   },
   {
     emoji: "📊",
-    title: "Track Your\nDaily Progress",
-    amharic: "የዕለት ሂደት",
-    description: "Log water intake, steps, and workouts. Calculate your BMI and see your weekly progress charts.",
+    titleKey: "tracker_title",
+    amharicKey: "today_glance",
+    descriptionKey: "bmi_desc",
     accent: "#FF7043",
-    features: ["Water tracker", "Step counter", "BMI calculator", "Weekly charts"],
+    featuresKeys: ["feat_water", "feat_steps", "feat_bmi", "feat_charts"],
   },
 ];
 
@@ -106,19 +108,21 @@ function OnboardingPage({
     }).start();
   }, [isActive]);
 
+  const { t } = useTranslation();
+
   return (
     <Animated.View style={[styles.page, { transform: [{ scale }] }]}>
       <View style={[styles.emojiBox, { backgroundColor: page.accent + "25", borderColor: page.accent + "50" }]}>
         <Text style={styles.emoji}>{page.emoji}</Text>
       </View>
-      <Text style={[styles.pageAmharic, { color: page.accent }]}>{page.amharic}</Text>
-      <Text style={styles.pageTitle}>{page.title}</Text>
-      <Text style={styles.pageDesc}>{page.description}</Text>
+      <Text style={[styles.pageAmharic, { color: page.accent }]}>{t(page.amharicKey as any)}</Text>
+      <Text style={styles.pageTitle}>{t(page.titleKey as any)}</Text>
+      <Text style={styles.pageDesc}>{t(page.descriptionKey as any)}</Text>
       <View style={styles.featureGrid}>
-        {page.features.map((f) => (
-          <View key={f} style={[styles.featureChip, { backgroundColor: page.accent + "18", borderColor: page.accent + "35" }]}>
+        {page.featuresKeys.map((fKey) => (
+          <View key={fKey} style={[styles.featureChip, { backgroundColor: page.accent + "18", borderColor: page.accent + "35" }]}>
             <View style={[styles.featureDot, { backgroundColor: page.accent }]} />
-            <Text style={[styles.featureText, { color: page.accent }]}>{f}</Text>
+            <Text style={[styles.featureText, { color: page.accent }]}>{t(fKey as any)}</Text>
           </View>
         ))}
       </View>
@@ -133,6 +137,7 @@ export default function WelcomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const logoSlide = useRef(new Animated.Value(0)).current;
   const logoFade = useRef(new Animated.Value(1)).current;
+  const { t, language, setLanguage } = useTranslation();
 
   const goNext = () => {
     if (currentPage < ONBOARDING_PAGES.length - 1) {
@@ -172,10 +177,25 @@ export default function WelcomeScreen() {
             <Text style={styles.logoFlag}>🇪🇹</Text>
           </View>
           <View>
-            <Text style={styles.appName}>Ye'Ethiopia</Text>
+            <Text style={styles.appName}>{t("welcome_title")}</Text>
             <Text style={styles.appTagline}>ምግብ • ጤና • ሕይወት</Text>
           </View>
         </Animated.View>
+
+        <View style={styles.langSwitch}>
+          <Pressable
+            onPress={() => setLanguage("en")}
+            style={[styles.langBtn, language === "en" && { backgroundColor: "#FFC107" }]}
+          >
+            <Text style={[styles.langBtnText, language === "en" && { color: "#000" }]}>EN</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setLanguage("am")}
+            style={[styles.langBtn, language === "am" && { backgroundColor: "#FFC107" }]}
+          >
+            <Text style={[styles.langBtnText, language === "am" && { color: "#000" }]}>አማ</Text>
+          </Pressable>
+        </View>
 
         <Animated.View style={{ opacity: logoFade }}>
           <FloatingFoodGrid />
@@ -217,7 +237,7 @@ export default function WelcomeScreen() {
         <View style={[styles.btnsRow, { paddingBottom: isWeb ? 34 : insets.bottom + 16 }]}>
           {currentPage < ONBOARDING_PAGES.length - 1 && (
             <Pressable onPress={handleGetStarted} style={styles.skipBtn}>
-              <Text style={styles.skipText}>Skip</Text>
+              <Text style={styles.skipText}>{t("back").toUpperCase()}</Text>
             </Pressable>
           )}
           <Pressable
@@ -229,7 +249,7 @@ export default function WelcomeScreen() {
             ]}
           >
             <Text style={styles.nextBtnText}>
-              {currentPage === ONBOARDING_PAGES.length - 1 ? "Get Started 🍽️" : "Next →"}
+              {currentPage === ONBOARDING_PAGES.length - 1 ? `${t("get_started")} 🍽️` : `${t("next_step")} →`}
             </Text>
           </Pressable>
         </View>
@@ -263,6 +283,9 @@ const styles = StyleSheet.create({
   },
   foodPhoto: { width: "100%", height: "100%" },
   foodOverlay: { ...StyleSheet.absoluteFillObject },
+  langSwitch: { flexDirection: "row", gap: 8, marginTop: -8 },
+  langBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" },
+  langBtnText: { color: "#FFF", fontSize: 12, fontFamily: "Inter_700Bold" },
   bottomSheet: {
     flex: 1,
     borderTopLeftRadius: 32,

@@ -19,24 +19,27 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { CATEGORIES, RECIPES, Recipe } from "@/data/recipes";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function DifficultyBadge({ level }: { level: string }) {
   const cfg: Record<string, { color: string; label: string }> = {
-    easy: { color: "#2E7D32", label: "Easy" },
-    medium: { color: "#E65100", label: "Medium" },
-    hard: { color: "#C62828", label: "Hard" },
+    easy: { color: "#2E7D32", label: "easy" },
+    medium: { color: "#E65100", label: "medium" },
+    hard: { color: "#C62828", label: "hard" },
   };
+  const { t } = useTranslation();
   const c = cfg[level] ?? cfg.easy;
   return (
     <View style={[styles.diffBadge, { backgroundColor: c.color + "25" }]}>
       <View style={[styles.diffDot, { backgroundColor: c.color }]} />
-      <Text style={[styles.diffText, { color: c.color }]}>{c.label}</Text>
+      <Text style={[styles.diffText, { color: c.color }]}>{t(c.label as any)}</Text>
     </View>
   );
 }
 
 function FeaturedCard({ recipe }: { recipe: Recipe }) {
   const { isRecipeSaved, toggleSaveRecipe } = useApp();
+  const { t } = useTranslation();
   const saved = isRecipeSaved(recipe.id);
   return (
     <Pressable
@@ -49,7 +52,7 @@ function FeaturedCard({ recipe }: { recipe: Recipe }) {
       <View style={styles.featuredContent}>
         <View style={[styles.featuredTopRow]}>
           <View style={[styles.featuredLabel, { backgroundColor: "#FFC107" }]}>
-            <Text style={[styles.featuredLabelText, { color: "#000" }]}>⭐ Recommended</Text>
+            <Text style={[styles.featuredLabelText, { color: "#000" }]}>⭐ {t("authentic")}</Text>
           </View>
           <Pressable
             onPress={(e) => { e.stopPropagation(); toggleSaveRecipe(recipe.id); }}
@@ -146,6 +149,7 @@ export default function RecipesScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { savedRecipes } = useApp();
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"default" | "time" | "calories">("default");
@@ -177,8 +181,8 @@ export default function RecipesScreen() {
         <BlurView intensity={Platform.OS === 'ios' ? 80 : 100} tint="dark" style={[styles.header, { paddingTop: isWeb ? 60 : insets.top + 12 }]}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={[styles.headerSub, { color: "#FFC107" }]}>የኢትዮጵያ ምግብ ቤት</Text>
-              <Text style={[styles.headerTitle, { color: "#FFFFFF" }]}>Recipes</Text>
+            <Text style={[styles.headerSub, { color: "#FFC107" }]}>{t("welcome_sub")}</Text>
+            <Text style={[styles.headerTitle, { color: "#FFFFFF" }]}>{t("recipes")}</Text>
             </View>
             <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
               <Pressable style={[styles.statChip, { backgroundColor: "rgba(255,193,7,0.15)", borderColor: "rgba(255,193,7,0.3)" }]}>
@@ -194,7 +198,7 @@ export default function RecipesScreen() {
           <View style={[styles.searchBar, { backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.12)" }]}>
             <Feather name="search" size={18} color="rgba(255,255,255,0.5)" />
             <TextInput
-              placeholder="Search 100+ Ethiopian dishes..."
+              placeholder={t("search_placeholder")}
               placeholderTextColor="rgba(255,255,255,0.4)"
               value={search}
               onChangeText={setSearch}
@@ -219,7 +223,7 @@ export default function RecipesScreen() {
                   ]}
                 >
                   <Feather name={cat.icon as any} size={14} color={selectedCategory === cat.id ? "#000" : "rgba(255,255,255,0.7)"} />
-                  <Text style={[styles.pillText, { color: selectedCategory === cat.id ? "#000" : "rgba(255,255,255,0.7)" }]}>{cat.label}</Text>
+                  <Text style={[styles.pillText, { color: selectedCategory === cat.id ? "#000" : "rgba(255,255,255,0.7)" }]}>{t(cat.label as any)}</Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -237,13 +241,13 @@ export default function RecipesScreen() {
             <View style={{ marginBottom: 8 }}>
               <FeaturedCard recipe={featuredRecipe} />
               <View style={styles.allRecipesLabel}>
-                <Text style={[styles.allRecipesTitle, { color: theme.text }]}>All Recipes</Text>
-                <Text style={[styles.allRecipesCount, { color: theme.muted }]}>{RECIPES.length} dishes</Text>
+                <Text style={[styles.allRecipesTitle, { color: theme.text }]}>{t("latest")}</Text>
+                <Text style={[styles.allRecipesCount, { color: theme.muted }]}>{RECIPES.length} {t("recipes")}</Text>
               </View>
             </View>
           ) : (
             <View style={styles.resultsLabel}>
-              <Text style={[styles.allRecipesCount, { color: theme.muted }]}>{filtered.length} result{filtered.length !== 1 ? "s" : ""}</Text>
+              <Text style={[styles.allRecipesCount, { color: theme.muted }]}>{t("results_count", { count: filtered.length, plural: filtered.length !== 1 ? "s" : "" })}</Text>
             </View>
           )
         }
@@ -252,9 +256,9 @@ export default function RecipesScreen() {
         ListEmptyComponent={() => (
           <View style={styles.empty}>
             <Feather name="search" size={40} color={theme.muted} />
-            <Text style={[styles.emptyText, { color: theme.muted }]}>No recipes found</Text>
+            <Text style={[styles.emptyText, { color: theme.muted }]}>{t("no_recipes")}</Text>
             <Pressable onPress={() => { setSearch(""); setSelectedCategory("all"); setSortBy("default"); }}>
-              <Text style={[styles.clearBtn, { color: theme.tint }]}>Clear all filters</Text>
+              <Text style={[styles.clearBtn, { color: theme.tint }]}>{t("clear_filters")}</Text>
             </Pressable>
           </View>
         )}

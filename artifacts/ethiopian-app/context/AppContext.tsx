@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type UnitSystem = "metric" | "imperial";
+export type Language = "en" | "am";
 
 export interface WorkoutLog {
   id: string;
@@ -73,6 +74,7 @@ const STORAGE_KEYS = {
   DEFAULT_SERVINGS: "default_servings",
   UNIT_SYSTEM: "unit_system",
   GROCERY: "grocery_items",
+  LANGUAGE: "app_language",
 };
 
 const today = () => new Date().toISOString().split("T")[0];
@@ -85,6 +87,7 @@ function useAppState() {
   const [themeMode, setThemeModeState] = useState<ThemeMode>("system");
   const [defaultServings, setDefaultServingsState] = useState(4);
   const [unitSystem, setUnitSystemState] = useState<UnitSystem>("metric");
+  const [language, setLanguageState] = useState<Language>("en");
   const [groceryItems, setGroceryItems] = useState<GroceryItem[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -100,6 +103,7 @@ function useAppState() {
           AsyncStorage.getItem(STORAGE_KEYS.DEFAULT_SERVINGS),
           AsyncStorage.getItem(STORAGE_KEYS.UNIT_SYSTEM),
           AsyncStorage.getItem(STORAGE_KEYS.GROCERY),
+          AsyncStorage.getItem(STORAGE_KEYS.LANGUAGE),
         ]);
         if (workouts) setWorkoutLogs(JSON.parse(workouts));
         if (water) setWaterEntries(JSON.parse(water));
@@ -109,6 +113,7 @@ function useAppState() {
         if (servings) setDefaultServingsState(parseInt(servings, 10));
         if (units) setUnitSystemState(units as UnitSystem);
         if (grocery) setGroceryItems(JSON.parse(grocery));
+        if (language) setLanguageState(language as Language);
       } catch (e) {
         console.error("Failed to load data", e);
       } finally {
@@ -195,6 +200,11 @@ function useAppState() {
     AsyncStorage.setItem(STORAGE_KEYS.UNIT_SYSTEM, u);
   }, []);
 
+  const setLanguage = useCallback((l: Language) => {
+    setLanguageState(l);
+    AsyncStorage.setItem(STORAGE_KEYS.LANGUAGE, l);
+  }, []);
+
   // --- Grocery list helpers ---
   const addRecipeToGrocery = useCallback((recipeId: string, recipeName: string, ingredients: { name: string; amount: number; unit: string }[]) => {
     setGroceryItems((prev) => {
@@ -278,6 +288,8 @@ function useAppState() {
     setDefaultServings,
     unitSystem,
     setUnitSystem,
+    language,
+    setLanguage,
     // Grocery
     groceryItems,
     addRecipeToGrocery,

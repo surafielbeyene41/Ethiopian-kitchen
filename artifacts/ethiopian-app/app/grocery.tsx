@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const CATEGORY_ICONS: Record<string, string> = {
   Spices: "thermometer",
@@ -41,6 +42,7 @@ export default function GroceryScreen() {
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === "web";
   const { groceryItems, toggleGroceryItem, removeGroceryItem, clearGrocery } = useApp();
+  const { t } = useTranslation();
 
   const grouped = useMemo(() => {
     const groups: Record<string, typeof groceryItems> = {};
@@ -61,11 +63,11 @@ export default function GroceryScreen() {
 
   const handleClear = () => {
     Alert.alert(
-      "Clear Grocery List",
-      "Remove all items from your grocery list?",
+      t("clear_list"),
+      t("clear_confirm"),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Clear All", style: "destructive", onPress: clearGrocery },
+        { text: t("cancel") || "Cancel", style: "cancel" },
+        { text: t("clear_list"), style: "destructive", onPress: clearGrocery },
       ]
     );
   };
@@ -79,8 +81,8 @@ export default function GroceryScreen() {
               <Feather name="arrow-left" size={20} color={theme.text} />
             </Pressable>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.headerSub, { color: theme.tint }]}>Shopping</Text>
-              <Text style={[styles.headerTitle, { color: theme.text }]}>Grocery List</Text>
+              <Text style={[styles.headerSub, { color: theme.tint }]}>{t("shopping")}</Text>
+              <Text style={[styles.headerTitle, { color: theme.text }]}>{t("grocery_list")}</Text>
             </View>
           </View>
         </View>
@@ -108,12 +110,12 @@ export default function GroceryScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12 }]}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+           <Pressable onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
             <Feather name="arrow-left" size={20} color={theme.text} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.headerSub, { color: theme.tint }]}>Shopping</Text>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>Grocery List</Text>
+            <Text style={[styles.headerSub, { color: theme.tint }]}>{t("shopping")}</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>{t("grocery_list")}</Text>
           </View>
           <Pressable onPress={handleClear} style={[styles.clearBtn, { borderColor: theme.danger + "40" }]}>
             <Feather name="trash-2" size={14} color={theme.danger} />
@@ -122,9 +124,9 @@ export default function GroceryScreen() {
 
         {/* Progress */}
         <View style={[styles.progressCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-          <View style={styles.progressRow}>
+           <View style={styles.progressRow}>
             <Text style={[styles.progressLabel, { color: theme.subtitle }]}>
-              {checkedCount} of {totalItems} items checked
+              {t("items_checked", { count: checkedCount, total: totalItems })}
             </Text>
             <Text style={[styles.progressPct, { color: theme.tint }]}>
               {totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0}%
