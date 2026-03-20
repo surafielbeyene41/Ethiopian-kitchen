@@ -59,48 +59,53 @@ function ExerciseCard({ exercise, theme, onLog, justLogged }: {
       onPress={() => router.push({ pathname: "/exercise/[id]", params: { id: exercise.id } })}
       style={({ pressed }) => [
         styles.exCard,
-        { opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] },
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorder,
+          opacity: pressed ? 0.92 : 1,
+          transform: [{ scale: pressed ? 0.985 : 1 }],
+        },
       ]}
     >
-      <BlurView intensity={10} tint="light" style={styles.exCardBlur}>
-        <View style={[styles.exIconBox, { backgroundColor: "rgba(255,193,7,0.1)" }]}>
-          <Feather name={exercise.icon as any} size={24} color="#FFC107" />
+      <View style={styles.exCardBlur}>
+        <View style={[styles.exIconBox, { backgroundColor: theme.tint + "20" }]}>
+          <Feather name={exercise.icon as any} size={24} color={theme.tint} />
         </View>
 
         <View style={{ flex: 1, gap: 6 }}>
           <View style={styles.exNameRow}>
             <View style={{ flex: 1 }}>
-              {exercise.amharic && <Text style={styles.exAmharic}>{exercise.amharic}</Text>}
-              <Text style={styles.exName} numberOfLines={1}>{exercise.name}</Text>
+              {exercise.amharic && <Text style={[styles.exAmharic, { color: theme.tint }]}>{exercise.amharic}</Text>}
+              <Text style={[styles.exName, { color: theme.text }]} numberOfLines={1}>{exercise.name}</Text>
             </View>
             <View style={[styles.levelBadge, { backgroundColor: levelColors[exercise.level] + "20" }]}>
               <Text style={[styles.levelText, { color: levelColors[exercise.level] }]}>{exercise.level}</Text>
             </View>
           </View>
 
-          <Text style={styles.exDesc} numberOfLines={2}>{exercise.description}</Text>
+          <Text style={[styles.exDesc, { color: theme.subtitle }]} numberOfLines={2}>{exercise.description}</Text>
 
           <View style={styles.exStats}>
             <View style={styles.exStat}>
-              <Feather name="clock" size={12} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.exStatText}>{exercise.duration} min</Text>
+              <Feather name="clock" size={12} color={theme.muted} />
+              <Text style={[styles.exStatText, { color: theme.muted }]}>{exercise.duration} min</Text>
             </View>
             <View style={styles.exStat}>
-              <Feather name="zap" size={12} color="#FFC107" />
-              <Text style={styles.exStatText}>{exercise.calories} kcal</Text>
+              <Feather name="zap" size={12} color={theme.tint} />
+              <Text style={[styles.exStatText, { color: theme.tint }]}>{exercise.calories} kcal</Text>
             </View>
             {exercise.sets && (
               <View style={styles.exStat}>
-                <Feather name="repeat" size={12} color="rgba(255,255,255,0.4)" />
-                <Text style={styles.exStatText}>{exercise.sets}×{exercise.reps}</Text>
+                <Feather name="repeat" size={12} color={theme.muted} />
+                <Text style={[styles.exStatText, { color: theme.muted }]}>{exercise.sets}×{exercise.reps}</Text>
               </View>
             )}
           </View>
 
           <View style={styles.exMuscleRow}>
             {exercise.muscles.slice(0, 3).map((m) => (
-              <View key={m} style={styles.muscleChip}>
-                <Text style={styles.muscleChipText}>{m}</Text>
+              <View key={m} style={[styles.muscleChip, { backgroundColor: theme.tagBg }]}>
+                <Text style={[styles.muscleChipText, { color: theme.tagText }]}>{m}</Text>
               </View>
             ))}
           </View>
@@ -109,12 +114,12 @@ function ExerciseCard({ exercise, theme, onLog, justLogged }: {
         <View style={styles.exActions}>
           <Pressable
             onPress={(e) => { e.stopPropagation(); onLog(); }}
-            style={[styles.logBtn, { backgroundColor: justLogged ? "#4CAF50" : "#FFC107" }]}
+            style={[styles.logBtn, { backgroundColor: justLogged ? "#4CAF50" : theme.tint }]}
           >
             <Feather name={justLogged ? "check" : "plus"} size={18} color="#000" />
           </Pressable>
         </View>
-      </BlurView>
+      </View>
     </Pressable>
   );
 }
