@@ -40,6 +40,14 @@ function RootLayoutNav({ showWelcome }: { showWelcome: boolean }) {
         name="exercise/[id]"
         options={{ headerShown: false, presentation: "card" }}
       />
+      <Stack.Screen
+        name="recipe/cooking-mode"
+        options={{ headerShown: false, presentation: "fullScreenModal" }}
+      />
+      <Stack.Screen
+        name="grocery"
+        options={{ headerShown: false, presentation: "card" }}
+      />
     </Stack>
   );
 }

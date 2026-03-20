@@ -22,12 +22,13 @@ export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const { toggleSaveRecipe, isRecipeSaved } = useApp();
+  const { toggleSaveRecipe, isRecipeSaved, addRecipeToGrocery, defaultServings, unitSystem: globalUnitSystem } = useApp();
   const isWeb = Platform.OS === "web";
+  const [groceryAdded, setGroceryAdded] = useState(false);
 
   const recipe = RECIPES.find((r) => r.id === id);
-  const [servings, setServings] = useState(recipe?.servings ?? 4);
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
+  const [servings, setServings] = useState(recipe?.servings ?? defaultServings);
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>(globalUnitSystem);
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [showCulture, setShowCulture] = useState(false);
 
@@ -187,6 +188,30 @@ export default function RecipeDetailScreen() {
             </View>
           )}
 
+          {/* Action Buttons */}
+          <View style={styles.actionRow}>
+            <Pressable
+              onPress={() => router.push({ pathname: "/recipe/cooking-mode", params: { id: recipe.id } })}
+              style={[styles.actionBtn, { backgroundColor: theme.tint }]}
+            >
+              <Feather name="play-circle" size={18} color="#fff" />
+              <Text style={styles.actionBtnText}>Start Cooking</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                addRecipeToGrocery(recipe.id, recipe.name, recipe.ingredients);
+                setGroceryAdded(true);
+                setTimeout(() => setGroceryAdded(false), 2500);
+              }}
+              style={[styles.actionBtn, { backgroundColor: groceryAdded ? theme.success : theme.card, borderWidth: 1, borderColor: groceryAdded ? theme.success : theme.cardBorder }]}
+            >
+              <Feather name={groceryAdded ? "check" : "shopping-cart"} size={18} color={groceryAdded ? "#fff" : theme.tint} />
+              <Text style={[styles.actionBtnText, { color: groceryAdded ? "#fff" : theme.tint }]}>
+                {groceryAdded ? "Added!" : "Add to Grocery"}
+              </Text>
+            </Pressable>
+          </View>
+
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Step-by-Step Instructions</Text>
           {recipe.steps.map((step) => (
             <Pressable
@@ -325,4 +350,7 @@ const styles = StyleSheet.create({
   pairAmharic: { fontSize: 12, fontFamily: "Inter_700Bold", paddingHorizontal: 12, paddingBottom: 12 },
   backBtn: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", margin: 20, backgroundColor: "rgba(255,255,255,0.05)" },
   notFound: { fontSize: 20, textAlign: "center", marginTop: 80, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+  actionRow: { flexDirection: "row", gap: 10, marginBottom: 24, marginTop: 8 },
+  actionBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 16, borderRadius: 16 },
+  actionBtnText: { color: "#fff", fontSize: 14, fontFamily: "Inter_700Bold" },
 });
