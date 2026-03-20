@@ -276,7 +276,7 @@ export const STEW_RECIPES: Recipe[] = [
     id: "gomen-be-siga",
     name: "Gomen be Siga",
     amharic: "ጎመን በሥጋ",
-    imageUri: require("../../assets/images/gomen.png"),
+    imageUri: require("../../assets/images/gomen-be-siga.png"),
     category: "stews-wots",
     difficulty: "medium",
     time: 50,

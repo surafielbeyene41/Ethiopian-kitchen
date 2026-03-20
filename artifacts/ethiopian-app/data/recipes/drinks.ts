@@ -144,7 +144,7 @@ export const DRINK_RECIPES: Recipe[] = [
     id: "keribo-non-alcoholic",
     name: "Keribo (Barley Juice)",
     amharic: "ከሪቦ",
-    imageUri: require("../../assets/images/birz.png"), // No specific keribo, reusing birz
+    imageUri: require("../../assets/images/keribo.png"),
     category: "drinks",
     difficulty: "easy",
     time: 1440,
@@ -165,7 +165,7 @@ export const DRINK_RECIPES: Recipe[] = [
     id: "papaya-juice-ethiopian",
     name: "Fresh Papaya Juice",
     amharic: "የፓፓያ ጭማቂ",
-    imageUri: require("../../assets/images/icon.png"),
+    imageUri: require("../../assets/images/papaya-juice.png"),
     category: "drinks",
     difficulty: "easy",
     time: 5,
