@@ -1,3 +1,4 @@
+import { BlurView } from "expo-blur";
 import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -8,6 +9,7 @@ import {
   Text,
   TextInput,
   View,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -153,13 +155,15 @@ export default function TrackerScreen() {
 
       <View style={styles.ringsRow}>
         {[
-          { label: "Water", value: `${todayWater}ml`, pct: waterPct, color: "#1565C0" },
-          { label: "Steps", value: todaySteps.toLocaleString(), pct: stepsPct, color: "#2E7D32" },
-          { label: "Burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#E65100" },
+          { label: "Water", value: `${todayWater}ml`, pct: waterPct, color: "#2196F3" },
+          { label: "Steps", value: todaySteps.toLocaleString(), pct: stepsPct, color: "#4CAF50" },
+          { label: "Burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#FF9800" },
         ].map((r) => (
-          <View key={r.label} style={[styles.ringCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <SummaryRing pct={r.pct} color={r.color} label={r.label} value={r.value} />
-            <Text style={[styles.ringCardLabel, { color: theme.muted }]}>{r.label}</Text>
+          <View key={r.label} style={styles.ringCardWrapper}>
+            <BlurView intensity={15} tint="light" style={[styles.ringCard, { borderColor: "rgba(255,255,255,0.08)" }]}>
+              <SummaryRing pct={r.pct} color={r.color} label={r.label} value={r.value} />
+              <Text style={[styles.ringCardLabel, { color: "rgba(255,255,255,0.5)" }]}>{r.label}</Text>
+            </BlurView>
           </View>
         ))}
       </View>
@@ -176,11 +180,14 @@ export default function TrackerScreen() {
             onPress={() => setActiveTab(t.id)}
             style={[
               styles.tabBtn,
-              { backgroundColor: activeTab === t.id ? theme.tint : theme.card, borderColor: activeTab === t.id ? theme.tint : theme.divider },
+              {
+                backgroundColor: activeTab === t.id ? "#FFC107" : "rgba(255,255,255,0.05)",
+                borderColor: activeTab === t.id ? "#FFC107" : "rgba(255,255,255,0.08)",
+              },
             ]}
           >
-            <Feather name={t.icon as any} size={13} color={activeTab === t.id ? "#fff" : theme.subtitle} />
-            <Text style={[styles.tabBtnText, { color: activeTab === t.id ? "#fff" : theme.subtitle }]}>{t.label}</Text>
+            <Feather name={t.icon as any} size={14} color={activeTab === t.id ? "#000" : "rgba(255,255,255,0.5)"} />
+            <Text style={[styles.tabBtnText, { color: activeTab === t.id ? "#000" : "rgba(255,255,255,0.5)" }]}>{t.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -188,21 +195,20 @@ export default function TrackerScreen() {
       <View style={styles.sectionWrap}>
         {activeTab === "summary" && (
           <View style={{ gap: 16 }}>
-            <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Text style={[styles.cardTitle, { color: theme.text }]}>Today at a Glance</Text>
+            <View style={styles.card}>
+              <Text style={[styles.cardTitle, { color: "#FFFFFF" }]}>Today at a Glance</Text>
               {[
-                { label: "Water Intake", value: `${todayWater} / ${WATER_GOAL_ML} ml`, pct: waterPct, color: "#1565C0", icon: "droplet" },
-                { label: "Steps", value: `${todaySteps.toLocaleString()} / ${STEP_GOAL.toLocaleString()}`, pct: stepsPct, color: "#2E7D32", icon: "navigation" },
-                { label: "Calories Burned", value: `${todayCaloriesBurned} / 500 kcal`, pct: calPct, color: "#E65100", icon: "zap" },
-                { label: "Workouts Done", value: `${todayWorkouts.length} workout${todayWorkouts.length !== 1 ? "s" : ""}`, pct: Math.min(todayWorkouts.length * 33, 100), color: "#6A1B9A", icon: "activity" },
+                { label: "Water Intake", value: `${todayWater} / ${WATER_GOAL_ML} ml`, pct: waterPct, color: "#2196F3", icon: "droplet" },
+                { label: "Steps", value: `${todaySteps.toLocaleString()} / ${STEP_GOAL.toLocaleString()}`, pct: stepsPct, color: "#4CAF50", icon: "navigation" },
+                { label: "Calories Burned", value: `${todayCaloriesBurned} / 500 kcal`, pct: calPct, color: "#FF9800", icon: "zap" },
               ].map((item) => (
                 <View key={item.label} style={styles.glanceRow}>
-                  <View style={[styles.glanceIcon, { backgroundColor: item.color + "18" }]}>
-                    <Feather name={item.icon as any} size={16} color={item.color} />
+                  <View style={[styles.glanceIcon, { backgroundColor: item.color + "20" }]}>
+                    <Feather name={item.icon as any} size={20} color={item.color} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={styles.glanceLabelRow}>
-                      <Text style={[styles.glanceLabel, { color: theme.subtitle }]}>{item.label}</Text>
+                      <Text style={[styles.glanceLabel, { color: "rgba(255,255,255,0.5)" }]}>{item.label}</Text>
                       <Text style={[styles.glanceVal, { color: item.color }]}>{item.value}</Text>
                     </View>
                     <ProgressBar value={item.pct} max={100} color={item.color} theme={theme} />
@@ -437,77 +443,78 @@ export default function TrackerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 14, gap: 10 },
-  headerSub: { fontSize: 11, fontFamily: "Inter_500Medium", letterSpacing: 1.2, textTransform: "uppercase" },
-  headerTitle: { fontSize: 32, fontFamily: "Inter_700Bold", marginTop: 2 },
-  dateStrip: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
-  dateText: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  ringsRow: { flexDirection: "row", gap: 10, marginHorizontal: 20, marginBottom: 14 },
-  ringCard: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 10, alignItems: "center", gap: 6 },
-  ringWrap: { width: 76, height: 76, alignItems: "center", justifyContent: "center", position: "relative" },
-  ringBack: { position: "absolute", width: 76, height: 76, borderRadius: 38, borderWidth: 8 },
-  ringFront: { position: "absolute", width: 76, height: 76, borderRadius: 38, borderWidth: 8 },
+  container: { flex: 1, backgroundColor: "#0E0804" },
+  header: { paddingHorizontal: 20, paddingBottom: 16, gap: 4 },
+  headerSub: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFC107", letterSpacing: 0.8 },
+  headerTitle: { fontSize: 34, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+  dateStrip: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)", marginTop: 10 },
+  dateText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#FFFFFF" },
+  ringsRow: { flexDirection: "row", gap: 12, marginHorizontal: 20, marginBottom: 20 },
+  ringCardWrapper: { flex: 1, borderRadius: 20, overflow: "hidden" },
+  ringCard: { flex: 1, borderWidth: 1, padding: 12, alignItems: "center", gap: 8 },
+  ringWrap: { width: 80, height: 80, alignItems: "center", justifyContent: "center", position: "relative" },
+  ringBack: { position: "absolute", width: 80, height: 80, borderRadius: 40, borderWidth: 9 },
+  ringFront: { position: "absolute", width: 80, height: 80, borderRadius: 40, borderWidth: 9 },
   ringInner: { alignItems: "center" },
-  ringPct: { fontSize: 14, fontFamily: "Inter_700Bold" },
-  ringValue: { fontSize: 9, fontFamily: "Inter_400Regular", color: "#888", textAlign: "center" },
-  ringCardLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textAlign: "center" },
-  tabsRow: { flexDirection: "row", gap: 7, marginHorizontal: 20, marginBottom: 14 },
-  tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingVertical: 8, borderRadius: 10, borderWidth: 1 },
-  tabBtnText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  sectionWrap: { marginHorizontal: 20, gap: 14 },
-  card: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 12 },
-  cardTitle: { fontSize: 16, fontFamily: "Inter_700Bold" },
-  sectionTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
-  glanceRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  glanceIcon: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 },
-  glanceLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
-  glanceLabel: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  glanceVal: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-  pBar: { height: 7, borderRadius: 4, overflow: "hidden" },
+  ringPct: { fontSize: 16, fontFamily: "Inter_700Bold" },
+  ringValue: { fontSize: 10, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)", textAlign: "center" },
+  ringCardLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", textAlign: "center" },
+  tabsRow: { flexDirection: "row", gap: 8, marginHorizontal: 20, marginBottom: 20 },
+  tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
+  tabBtnText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+  sectionWrap: { marginHorizontal: 20, gap: 16 },
+  card: { borderRadius: 24, borderWidth: 1, padding: 20, gap: 16, backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  cardTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  sectionTitle: { fontSize: 22, fontFamily: "Inter_700Bold", color: "#FFFFFF", marginTop: 4 },
+  glanceRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  glanceIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  glanceLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  glanceLabel: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  glanceVal: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  pBar: { height: 8, borderRadius: 4, overflow: "hidden" },
   pBarFill: { height: "100%", borderRadius: 4 },
-  chartRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", height: 80 },
-  barCol: { alignItems: "center", gap: 4, flex: 1 },
-  barBg: { width: "65%", borderRadius: 4, justifyContent: "flex-end", overflow: "hidden" },
-  barFill: { width: "100%", borderRadius: 4 },
-  barLabel: { fontSize: 10 },
-  chartAvg: { fontSize: 11, fontFamily: "Inter_400Regular", textAlign: "center" },
-  workoutRow: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 12, borderWidth: 1, padding: 12, marginBottom: 8 },
-  workoutIcon: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  workoutName: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  workoutMeta: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  workoutKcal: { fontSize: 13, fontFamily: "Inter_700Bold" },
-  mainStatRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  mainStatIcon: { width: 48, height: 48, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  mainStatVal: { fontSize: 24, fontFamily: "Inter_700Bold" },
-  mainStatLabel: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
-  quickLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-  quickRow: { flexDirection: "row", gap: 8 },
-  quickBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 10, borderRadius: 10, borderWidth: 1 },
-  quickBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  stepsInputRow: { flexDirection: "row", gap: 8, alignItems: "center" },
-  adjBtn: { width: 44, height: 44, borderRadius: 10, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  stepsInput: { flex: 1, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontFamily: "Inter_600SemiBold", textAlign: "center" },
-  saveBtn: { width: 44, height: 44, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  calorieEstimate: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 10, padding: 12 },
-  calorieEstimateText: { fontSize: 13, fontFamily: "Inter_400Regular", flex: 1 },
-  logRow: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 10, borderWidth: 1, padding: 11, marginBottom: 6 },
-  logDot: { width: 7, height: 7, borderRadius: 3.5 },
-  logMain: { flex: 1, fontSize: 14, fontFamily: "Inter_500Medium" },
-  logTime: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  emptyBox: { borderRadius: 14, borderWidth: 1, padding: 28, alignItems: "center", gap: 8 },
-  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular" },
-  bmiHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  bmiSubtext: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
-  bmiInputsRow: { flexDirection: "row", gap: 12 },
-  bmiInputLabel: { fontSize: 12, fontFamily: "Inter_500Medium", marginBottom: 6 },
-  bmiInput: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, fontFamily: "Inter_600SemiBold" },
-  bmiResult: { borderRadius: 14, borderWidth: 1, padding: 16, alignItems: "center", gap: 4 },
-  bmiScore: { fontSize: 28, fontFamily: "Inter_700Bold" },
-  bmiCat: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
-  bmiScaleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  bmiScaleDot: { width: 8, height: 8, borderRadius: 4, flexShrink: 0 },
-  bmiScaleRange: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular" },
-  bmiScaleCat: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-  bmiDisclaimer: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },
+  chartRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", height: 100, marginTop: 10 },
+  barCol: { alignItems: "center", gap: 6, flex: 1 },
+  barBg: { width: "70%", borderRadius: 6, justifyContent: "flex-end", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" },
+  barFill: { width: "100%", borderRadius: 6 },
+  barLabel: { fontSize: 11, marginTop: 4 },
+  chartAvg: { fontSize: 12, fontFamily: "Inter_500Medium", textAlign: "center", color: "rgba(255,255,255,0.4)", marginTop: 10 },
+  workoutRow: { flexDirection: "row", alignItems: "center", gap: 14, borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 10, backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  workoutIcon: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  workoutName: { fontSize: 16, fontFamily: "Inter_700Bold" },
+  workoutMeta: { fontSize: 13, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)" },
+  workoutKcal: { fontSize: 15, fontFamily: "Inter_700Bold" },
+  mainStatRow: { flexDirection: "row", alignItems: "center", gap: 16 },
+  mainStatIcon: { width: 56, height: 56, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  mainStatVal: { fontSize: 32, fontFamily: "Inter_700Bold" },
+  mainStatLabel: { fontSize: 14, fontFamily: "Inter_500Medium", marginTop: 2, color: "rgba(255,255,255,0.4)" },
+  quickLabel: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#FFFFFF", textTransform: "uppercase", letterSpacing: 1 },
+  quickRow: { flexDirection: "row", gap: 10 },
+  quickBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingVertical: 12, borderRadius: 14, borderWidth: 1 },
+  quickBtnText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  stepsInputRow: { flexDirection: "row", gap: 10, alignItems: "center" },
+  adjBtn: { width: 48, height: 48, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" },
+  stepsInput: { flex: 1, borderRadius: 14, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, fontSize: 18, fontFamily: "Inter_700Bold", textAlign: "center", backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" },
+  saveBtn: { width: 48, height: 48, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  calorieEstimate: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 14, padding: 14, backgroundColor: "rgba(255,255,255,0.05)" },
+  calorieEstimateText: { fontSize: 14, fontFamily: "Inter_500Medium", flex: 1, color: "rgba(255,255,255,0.7)" },
+  logRow: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, borderWidth: 1, padding: 14, marginBottom: 8, backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  logDot: { width: 8, height: 8, borderRadius: 4 },
+  logMain: { flex: 1, fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#FFFFFF" },
+  logTime: { fontSize: 13, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)" },
+  emptyBox: { borderRadius: 20, borderWidth: 1, padding: 40, alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)" },
+  emptyText: { fontSize: 15, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.3)" },
+  bmiHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  bmiSubtext: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 22, color: "rgba(255,255,255,0.6)" },
+  bmiInputsRow: { flexDirection: "row", gap: 16 },
+  bmiInputLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold", marginBottom: 8, color: "rgba(255,255,255,0.5)" },
+  bmiInput: { borderRadius: 14, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, fontSize: 18, fontFamily: "Inter_700Bold", backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" },
+  bmiResult: { borderRadius: 20, borderWidth: 1, padding: 20, alignItems: "center", gap: 6, marginTop: 10 },
+  bmiScore: { fontSize: 36, fontFamily: "Inter_700Bold" },
+  bmiCat: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  bmiScaleRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 },
+  bmiScaleDot: { width: 10, height: 10, borderRadius: 5, flexShrink: 0 },
+  bmiScaleRange: { flex: 1, fontSize: 14, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.5)" },
+  bmiScaleCat: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  bmiDisclaimer: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 18, color: "rgba(255,255,255,0.3)", marginTop: 10 },
 });

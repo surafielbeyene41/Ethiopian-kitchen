@@ -1,3 +1,4 @@
+import { BlurView } from "expo-blur";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -11,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -33,7 +35,7 @@ function DifficultyBadge({ level }: { level: string }) {
   );
 }
 
-function FeaturedCard({ recipe, theme }: { recipe: Recipe; theme: any }) {
+function FeaturedCard({ recipe }: { recipe: Recipe }) {
   const { isRecipeSaved, toggleSaveRecipe } = useApp();
   const saved = isRecipeSaved(recipe.id);
   return (
@@ -46,14 +48,14 @@ function FeaturedCard({ recipe, theme }: { recipe: Recipe; theme: any }) {
 
       <View style={styles.featuredContent}>
         <View style={[styles.featuredTopRow]}>
-          <View style={[styles.featuredLabel, { backgroundColor: recipe.color }]}>
-            <Text style={styles.featuredLabelText}>⭐ Today's Featured</Text>
+          <View style={[styles.featuredLabel, { backgroundColor: "#FFC107" }]}>
+            <Text style={[styles.featuredLabelText, { color: "#000" }]}>⭐ Recommended</Text>
           </View>
           <Pressable
             onPress={(e) => { e.stopPropagation(); toggleSaveRecipe(recipe.id); }}
-            style={[styles.featuredBookmark, saved && { backgroundColor: recipe.color }]}
+            style={[styles.featuredBookmark, { backgroundColor: saved ? "#FFC107" : "rgba(0,0,0,0.5)" }]}
           >
-            <Feather name="bookmark" size={14} color="#fff" />
+            <Feather name="bookmark" size={16} color={saved ? "#000" : "#fff"} />
           </Pressable>
         </View>
 
@@ -68,7 +70,7 @@ function FeaturedCard({ recipe, theme }: { recipe: Recipe; theme: any }) {
               { icon: "zap", text: `${recipe.calories} kcal` },
             ].map((m) => (
               <View key={m.icon} style={styles.featuredMetaItem}>
-                <Feather name={m.icon as any} size={12} color="rgba(255,255,255,0.85)" />
+                <Feather name={m.icon as any} size={13} color="#FFC107" />
                 <Text style={styles.featuredMetaText}>{m.text}</Text>
               </View>
             ))}
@@ -79,7 +81,7 @@ function FeaturedCard({ recipe, theme }: { recipe: Recipe; theme: any }) {
   );
 }
 
-function RecipeCard({ recipe, theme }: { recipe: Recipe; theme: any }) {
+function RecipeCard({ recipe }: { recipe: Recipe }) {
   const { isRecipeSaved, toggleSaveRecipe } = useApp();
   const saved = isRecipeSaved(recipe.id);
 
@@ -88,7 +90,11 @@ function RecipeCard({ recipe, theme }: { recipe: Recipe; theme: any }) {
       onPress={() => router.push({ pathname: "/recipe/[id]", params: { id: recipe.id } })}
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: theme.card, borderColor: theme.cardBorder, opacity: pressed ? 0.93 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] },
+        {
+          borderColor: "rgba(255,255,255,0.08)",
+          opacity: pressed ? 0.93 : 1,
+          transform: [{ scale: pressed ? 0.985 : 1 }]
+        },
       ]}
     >
       <View style={styles.cardImageContainer}>
@@ -96,46 +102,36 @@ function RecipeCard({ recipe, theme }: { recipe: Recipe; theme: any }) {
         <View style={[styles.cardColorBar, { backgroundColor: recipe.color }]} />
         <Pressable
           onPress={(e) => { e.stopPropagation(); toggleSaveRecipe(recipe.id); }}
-          style={[styles.saveBtn, { backgroundColor: saved ? recipe.color : "rgba(0,0,0,0.35)" }]}
+          style={[styles.saveBtn, { backgroundColor: saved ? "#FFC107" : "rgba(0,0,0,0.4)" }]}
         >
-          <Feather name="bookmark" size={13} color={saved ? "#FDD835" : "#fff"} />
+          <Feather name="bookmark" size={15} color={saved ? "#000" : "#fff"} />
         </Pressable>
         <DifficultyBadge level={recipe.difficulty} />
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={[styles.cardAmharic, { color: recipe.color }]}>{recipe.amharic}</Text>
-        <Text style={[styles.cardName, { color: theme.text }]}>{recipe.name}</Text>
-        <Text style={[styles.cardDesc, { color: theme.subtitle }]} numberOfLines={2}>{recipe.description}</Text>
+        <Text style={[styles.cardAmharic, { color: "rgba(255,255,255,0.5)" }]}>{recipe.amharic}</Text>
+        <Text style={[styles.cardName, { color: "#FFF" }]}>{recipe.name}</Text>
+        <Text style={[styles.cardDesc, { color: "rgba(255,255,255,0.6)" }]} numberOfLines={2}>{recipe.description}</Text>
 
         <View style={styles.cardMetaRow}>
           <View style={styles.cardMetaItem}>
-            <Feather name="clock" size={11} color={theme.muted} />
-            <Text style={[styles.cardMetaText, { color: theme.muted }]}>
+            <Feather name="clock" size={12} color="#FFC107" />
+            <Text style={[styles.cardMetaText, { color: "rgba(255,255,255,0.8)" }]}>
               {recipe.time >= 60 ? `${Math.floor(recipe.time / 60)}h${recipe.time % 60 > 0 ? ` ${recipe.time % 60}m` : ""}` : `${recipe.time}m`}
             </Text>
           </View>
           <View style={styles.cardMetaDot} />
           <View style={styles.cardMetaItem}>
-            <Feather name="users" size={11} color={theme.muted} />
-            <Text style={[styles.cardMetaText, { color: theme.muted }]}>{recipe.servings} serv</Text>
-          </View>
-          <View style={styles.cardMetaDot} />
-          <View style={styles.cardMetaItem}>
-            <Feather name="zap" size={11} color={theme.muted} />
-            <Text style={[styles.cardMetaText, { color: theme.muted }]}>{recipe.calories} kcal</Text>
-          </View>
-          <View style={styles.cardMetaDot} />
-          <View style={styles.cardMetaItem}>
-            <Feather name="heart" size={11} color={theme.muted} />
-            <Text style={[styles.cardMetaText, { color: theme.muted }]}>{recipe.protein}g P</Text>
+            <Feather name="zap" size={12} color="#FFC107" />
+            <Text style={[styles.cardMetaText, { color: "rgba(255,255,255,0.8)" }]}>{recipe.calories} kcal</Text>
           </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12 }}>
           {recipe.tags.slice(0, 5).map((tag) => (
-            <View key={tag} style={[styles.tag, { backgroundColor: theme.tagBg }]}>
-              <Text style={[styles.tagText, { color: theme.tagText }]}>{tag}</Text>
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
             </View>
           ))}
         </ScrollView>
@@ -175,65 +171,58 @@ export default function RecipesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12, backgroundColor: theme.background }]}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={[styles.headerSub, { color: theme.subtitle }]}>Ethiopian Kitchen</Text>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>Recipes</Text>
-          </View>
-          <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
-            <View style={[styles.statChip, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Feather name="bookmark" size={12} color={theme.tint} />
-              <Text style={[styles.statChipText, { color: theme.tint }]}>{savedRecipes.length} saved</Text>
+      <View style={styles.headerWrapper}>
+        <BlurView intensity={Platform.OS === 'ios' ? 80 : 100} tint="dark" style={[styles.header, { paddingTop: isWeb ? 60 : insets.top + 12 }]}>
+          <View style={styles.headerTop}>
+            <View>
+              <Text style={[styles.headerSub, { color: "#FFC107" }]}>የኢትዮጵያ ምግብ ቤት</Text>
+              <Text style={[styles.headerTitle, { color: "#FFFFFF" }]}>Recipes</Text>
             </View>
-            <View style={[styles.flagBox, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-              <Text style={{ fontSize: 22 }}>🇪🇹</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={[styles.searchBar, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-          <Feather name="search" size={16} color={theme.muted} />
-          <TextInput
-            placeholder="Search recipes, tags, or Amharic..."
-            placeholderTextColor={theme.muted}
-            value={search}
-            onChangeText={setSearch}
-            style={[styles.searchInput, { color: theme.text }]}
-          />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch("")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Feather name="x-circle" size={16} color={theme.muted} />
-            </Pressable>
-          )}
-        </View>
-
-        <View style={styles.filterRow}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsRow}>
-            {CATEGORIES.map((cat) => (
-              <Pressable
-                key={cat.id}
-                onPress={() => setSelectedCategory(cat.id)}
-                style={[
-                  styles.pill,
-                  { backgroundColor: selectedCategory === cat.id ? theme.tint : theme.card, borderColor: selectedCategory === cat.id ? theme.tint : theme.divider },
-                ]}
-              >
-                <Feather name={cat.icon as any} size={12} color={selectedCategory === cat.id ? "#fff" : theme.subtitle} />
-                <Text style={[styles.pillText, { color: selectedCategory === cat.id ? "#fff" : theme.subtitle }]}>{cat.label}</Text>
+            <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+              <Pressable style={[styles.statChip, { backgroundColor: "rgba(255,193,7,0.15)", borderColor: "rgba(255,193,7,0.3)" }]}>
+                <Feather name="bookmark" size={14} color="#FFC107" />
+                <Text style={[styles.statChipText, { color: "#FFC107" }]}>{savedRecipes.length}</Text>
               </Pressable>
-            ))}
-          </ScrollView>
-          <Pressable
-            onPress={() => setSortBy(sortBy === "default" ? "time" : sortBy === "time" ? "calories" : "default")}
-            style={[styles.sortBtn, { backgroundColor: theme.card, borderColor: theme.divider }]}
-          >
-            <Feather name="sliders" size={14} color={sortBy !== "default" ? theme.tint : theme.subtitle} />
-            <Text style={[styles.sortBtnText, { color: sortBy !== "default" ? theme.tint : theme.subtitle }]}>
-              {sortBy === "time" ? "Time" : sortBy === "calories" ? "Kcal" : "Sort"}
-            </Text>
-          </Pressable>
-        </View>
+              <View style={[styles.flagBox, { backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.15)" }]}>
+                <Text style={{ fontSize: 24 }}>🇪🇹</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={[styles.searchBar, { backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.12)" }]}>
+            <Feather name="search" size={18} color="rgba(255,255,255,0.5)" />
+            <TextInput
+              placeholder="Search 100+ Ethiopian dishes..."
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              value={search}
+              onChangeText={setSearch}
+              style={[styles.searchInput, { color: "#FFFFFF" }]}
+            />
+            {search.length > 0 && (
+              <Pressable onPress={() => setSearch("")}>
+                <Feather name="x-circle" size={18} color="rgba(255,255,255,0.5)" />
+              </Pressable>
+            )}
+          </View>
+
+          <View style={styles.filterRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsRow}>
+              {CATEGORIES.map((cat) => (
+                <Pressable
+                  key={cat.id}
+                  onPress={() => setSelectedCategory(cat.id)}
+                  style={[
+                    styles.pill,
+                    selectedCategory === cat.id ? { backgroundColor: "#FFC107", borderColor: "#FFC107" } : { backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.1)" },
+                  ]}
+                >
+                  <Feather name={cat.icon as any} size={14} color={selectedCategory === cat.id ? "#000" : "rgba(255,255,255,0.7)"} />
+                  <Text style={[styles.pillText, { color: selectedCategory === cat.id ? "#000" : "rgba(255,255,255,0.7)" }]}>{cat.label}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </BlurView>
       </View>
 
       <FlatList
@@ -244,7 +233,7 @@ export default function RecipesScreen() {
         ListHeaderComponent={
           showFeatured ? (
             <View style={{ marginBottom: 8 }}>
-              <FeaturedCard recipe={featuredRecipe} theme={theme} />
+              <FeaturedCard recipe={featuredRecipe} />
               <View style={styles.allRecipesLabel}>
                 <Text style={[styles.allRecipesTitle, { color: theme.text }]}>All Recipes</Text>
                 <Text style={[styles.allRecipesCount, { color: theme.muted }]}>{RECIPES.length} dishes</Text>
@@ -256,7 +245,7 @@ export default function RecipesScreen() {
             </View>
           )
         }
-        renderItem={({ item }) => <RecipeCard recipe={item} theme={theme} />}
+        renderItem={({ item }) => <RecipeCard recipe={item} />}
         ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
         ListEmptyComponent={() => (
           <View style={styles.empty}>
@@ -273,61 +262,68 @@ export default function RecipesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 10, gap: 12 },
-  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  headerSub: { fontSize: 11, fontFamily: "Inter_500Medium", letterSpacing: 1.2, textTransform: "uppercase" },
-  headerTitle: { fontSize: 32, fontFamily: "Inter_700Bold", marginTop: 2 },
-  statChip: { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 10, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 },
-  statChipText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  flagBox: { width: 42, height: 42, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  searchBar: { flexDirection: "row", alignItems: "center", borderRadius: 13, paddingHorizontal: 13, paddingVertical: 11, borderWidth: 1, gap: 8 },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular" },
-  filterRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  pillsRow: { gap: 7 },
-  pill: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
-  pillText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  container: { flex: 1, backgroundColor: "#0E0804" },
+  headerWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  header: { paddingHorizontal: 20, paddingBottom: 16, gap: 14 },
+  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerSub: { fontSize: 13, fontFamily: "Inter_600SemiBold", letterSpacing: 0.8 },
+  headerTitle: { fontSize: 34, fontFamily: "Inter_700Bold", marginTop: -2 },
+  statChip: { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6 },
+  statChipText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  flagBox: { width: 44, height: 44, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  searchBar: { flexDirection: "row", alignItems: "center", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, gap: 10 },
+  searchInput: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular" },
+  filterRow: { flexDirection: "row", alignItems: "center" },
+  pillsRow: { gap: 8 },
+  pill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 22, borderWidth: 1 },
+  pillText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   sortBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, borderWidth: 1 },
   sortBtnText: { fontSize: 12, fontFamily: "Inter_500Medium" },
-  list: { paddingHorizontal: 20, paddingTop: 4 },
-  featuredCard: { height: 240, borderRadius: 20, overflow: "hidden", marginBottom: 4, position: "relative" },
+  list: { paddingHorizontal: 20, paddingTop: 200 }, // Push down content below floating header
+  featuredCard: { height: 260, borderRadius: 24, overflow: "hidden", marginBottom: 6, position: "relative" },
   featuredImage: { width: "100%", height: "100%" },
-  featuredOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.48)" },
-  featuredContent: { ...StyleSheet.absoluteFillObject, padding: 16, justifyContent: "space-between" },
+  featuredOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(14,8,4,0.55)" },
+  featuredContent: { ...StyleSheet.absoluteFillObject, padding: 20, justifyContent: "space-between" },
   featuredTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  featuredLabel: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
-  featuredLabelText: { color: "#fff", fontSize: 11, fontFamily: "Inter_700Bold" },
-  featuredBookmark: { width: 32, height: 32, borderRadius: 9, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
-  featuredBottom: { gap: 4 },
-  featuredAmharic: { color: "rgba(255,255,255,0.75)", fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  featuredName: { color: "#fff", fontSize: 24, fontFamily: "Inter_700Bold", lineHeight: 28 },
-  featuredDesc: { color: "rgba(255,255,255,0.8)", fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17 },
-  featuredMeta: { flexDirection: "row", gap: 12, marginTop: 6, flexWrap: "wrap" },
-  featuredMetaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  featuredMetaText: { color: "rgba(255,255,255,0.9)", fontSize: 12, fontFamily: "Inter_500Medium" },
-  allRecipesLabel: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, marginBottom: 10 },
-  allRecipesTitle: { fontSize: 20, fontFamily: "Inter_700Bold" },
-  allRecipesCount: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  resultsLabel: { paddingBottom: 12 },
-  card: { borderRadius: 18, borderWidth: 1, overflow: "hidden" },
-  cardImageContainer: { height: 180, position: "relative" },
+  featuredLabel: { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  featuredLabelText: { color: "#fff", fontSize: 12, fontFamily: "Inter_700Bold" },
+  featuredBookmark: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
+  featuredBottom: { gap: 6 },
+  featuredAmharic: { color: "rgba(255,193,7,0.8)", fontSize: 12, fontFamily: "Inter_700Bold" },
+  featuredName: { color: "#fff", fontSize: 30, fontFamily: "Inter_700Bold", lineHeight: 34 },
+  featuredDesc: { color: "rgba(255,255,255,0.7)", fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
+  featuredMeta: { flexDirection: "row", gap: 16, marginTop: 8 },
+  featuredMetaItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  featuredMetaText: { color: "rgba(255,255,255,0.9)", fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  allRecipesLabel: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 24, marginBottom: 12 },
+  allRecipesTitle: { fontSize: 22, fontFamily: "Inter_700Bold" },
+  allRecipesCount: { fontSize: 14, fontFamily: "Inter_400Regular" },
+  resultsLabel: { paddingBottom: 16 },
+  card: { borderRadius: 22, borderWidth: 1, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.03)" },
+  cardImageContainer: { height: 200, position: "relative" },
   cardImage: { width: "100%", height: "100%" },
-  cardColorBar: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-  saveBtn: { position: "absolute", top: 10, right: 10, width: 32, height: 32, borderRadius: 9, alignItems: "center", justifyContent: "center" },
-  diffBadge: { position: "absolute", bottom: 10, left: 10, flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
-  diffDot: { width: 6, height: 6, borderRadius: 3 },
-  diffText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  cardBody: { padding: 14 },
-  cardAmharic: { fontSize: 11, fontFamily: "Inter_600SemiBold", marginBottom: 1 },
-  cardName: { fontSize: 20, fontFamily: "Inter_700Bold", lineHeight: 24, marginBottom: 5 },
-  cardDesc: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18, marginBottom: 8 },
-  cardMetaRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
-  cardMetaItem: { flexDirection: "row", alignItems: "center", gap: 3 },
-  cardMetaDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: "#ccc" },
-  cardMetaText: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  tag: { borderRadius: 7, paddingHorizontal: 9, paddingVertical: 4, marginRight: 6 },
-  tagText: { fontSize: 11, fontFamily: "Inter_500Medium" },
-  empty: { alignItems: "center", paddingTop: 60, gap: 12 },
-  emptyText: { fontSize: 15, fontFamily: "Inter_400Regular" },
-  clearBtn: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  cardColorBar: { position: "absolute", left: 0, top: 0, bottom: 0, width: 5 },
+  saveBtn: { position: "absolute", top: 12, right: 12, width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  diffBadge: { position: "absolute", bottom: 12, left: 12, flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: "rgba(0,0,0,0.5)" },
+  diffDot: { width: 7, height: 7, borderRadius: 3.5 },
+  diffText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+  cardBody: { padding: 18 },
+  cardAmharic: { fontSize: 12, fontFamily: "Inter_700Bold", marginBottom: 2 },
+  cardName: { fontSize: 22, fontFamily: "Inter_700Bold", lineHeight: 26, marginBottom: 6 },
+  cardDesc: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20, marginBottom: 12 },
+  cardMetaRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
+  cardMetaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  cardMetaDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.2)" },
+  cardMetaText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  tag: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginRight: 8, backgroundColor: "rgba(255,255,255,0.08)" },
+  tagText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.6)" },
+  empty: { alignItems: "center", paddingTop: 100, gap: 16 },
+  emptyText: { fontSize: 16, fontFamily: "Inter_400Regular" },
+  clearBtn: { fontSize: 15, fontFamily: "Inter_700Bold" },
 });

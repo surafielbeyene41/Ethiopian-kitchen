@@ -1,3 +1,4 @@
+import { BlurView } from "expo-blur";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -26,7 +27,7 @@ const ONBOARDING_PAGES = [
     emoji: "🍽️",
     title: "Authentic\nEthiopian Kitchen",
     amharic: "የኢትዮጵያ ምግብ ቤት",
-    description: "Explore 6 traditional recipes with step-by-step instructions, cultural insights, and smart ingredient converters.",
+    description: "Explore 100+ traditional recipes with step-by-step instructions, cultural insights, and smart ingredient converters.",
     accent: "#FFC107",
     features: ["Real food photos", "Amharic names", "Unit converter", "Cultural stories"],
   },
@@ -181,7 +182,7 @@ export default function WelcomeScreen() {
         </Animated.View>
       </View>
 
-      <View style={styles.bottomSheet}>
+      <BlurView intensity={25} tint="dark" style={styles.bottomSheet}>
         <ScrollView
           ref={scrollRef}
           horizontal
@@ -232,7 +233,7 @@ export default function WelcomeScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </BlurView>
     </View>
   );
 }
@@ -240,23 +241,23 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0E0804" },
   bg: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
-  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(14,8,4,0.78)" },
-  topSection: { height: 320, paddingHorizontal: 24, paddingTop: 4, gap: 18, justifyContent: "flex-end", paddingBottom: 22 },
-  logoRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(14,8,4,0.72)" },
+  topSection: { height: 340, paddingHorizontal: 24, paddingTop: 4, gap: 18, justifyContent: "flex-end", paddingBottom: 32 },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   logoBox: {
-    width: 52, height: 52, borderRadius: 16,
-    backgroundColor: "rgba(255,193,7,0.18)",
-    borderWidth: 1.5, borderColor: "rgba(255,193,7,0.4)",
+    width: 60, height: 60, borderRadius: 20,
+    backgroundColor: "rgba(255,193,7,0.12)",
+    borderWidth: 1.5, borderColor: "rgba(255,193,7,0.3)",
     alignItems: "center", justifyContent: "center",
   },
-  logoFlag: { fontSize: 26 },
-  appName: { color: "#FFC107", fontSize: 26, fontFamily: "Inter_700Bold", letterSpacing: -0.5 },
-  appTagline: { color: "rgba(255,193,7,0.6)", fontSize: 12, fontFamily: "Inter_500Medium", marginTop: 2 },
-  foodGrid: { flexDirection: "row", gap: 10, justifyContent: "flex-start" },
+  logoFlag: { fontSize: 30 },
+  appName: { color: "#FFC107", fontSize: 32, fontFamily: "Inter_700Bold", letterSpacing: -1 },
+  appTagline: { color: "rgba(255,255,255,0.5)", fontSize: 13, fontFamily: "Inter_600SemiBold", marginTop: 2, letterSpacing: 1 },
+  foodGrid: { flexDirection: "row", gap: 12, justifyContent: "flex-start" },
   foodItem: {
-    width: (width - 68) / 4,
-    height: (width - 68) / 4,
-    borderRadius: 16,
+    width: (width - 76) / 4,
+    height: (width - 76) / 4,
+    borderRadius: 18,
     overflow: "hidden",
     borderWidth: 1.5,
   },
@@ -264,40 +265,39 @@ const styles = StyleSheet.create({
   foodOverlay: { ...StyleSheet.absoluteFillObject },
   bottomSheet: {
     flex: 1,
-    backgroundColor: "rgba(18,10,6,0.96)",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,193,7,0.2)",
+    borderTopColor: "rgba(255,255,255,0.1)",
     overflow: "hidden",
   },
-  page: { width, paddingHorizontal: 28, paddingTop: 28, paddingBottom: 4, gap: 12 },
+  page: { width, paddingHorizontal: 32, paddingTop: 40, paddingBottom: 4, gap: 16 },
   emojiBox: {
-    width: 64, height: 64, borderRadius: 20,
+    width: 68, height: 68, borderRadius: 22,
     alignItems: "center", justifyContent: "center",
     borderWidth: 1.5,
   },
-  emoji: { fontSize: 30 },
-  pageAmharic: { fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 0.5 },
-  pageTitle: { color: "#FFFFFF", fontSize: 30, fontFamily: "Inter_700Bold", lineHeight: 36 },
-  pageDesc: { color: "rgba(255,255,255,0.65)", fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 22 },
-  featureGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
+  emoji: { fontSize: 32 },
+  pageAmharic: { fontSize: 13, fontFamily: "Inter_700Bold", letterSpacing: 0.8, textTransform: "uppercase" },
+  pageTitle: { color: "#FFFFFF", fontSize: 34, fontFamily: "Inter_700Bold", lineHeight: 40 },
+  pageDesc: { color: "rgba(255,255,255,0.6)", fontSize: 15, fontFamily: "Inter_400Regular", lineHeight: 24 },
+  featureGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 8 },
   featureChip: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-    borderRadius: 10, borderWidth: 1,
-    paddingHorizontal: 10, paddingVertical: 6,
+    flexDirection: "row", alignItems: "center", gap: 8,
+    borderRadius: 12, borderWidth: 1,
+    paddingHorizontal: 12, paddingVertical: 8,
   },
-  featureDot: { width: 5, height: 5, borderRadius: 2.5 },
-  featureText: { fontSize: 12, fontFamily: "Inter_500Medium" },
-  dotsRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 16 },
-  dot: { height: 8, borderRadius: 4 },
-  btnsRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 24, gap: 12 },
+  featureDot: { width: 6, height: 6, borderRadius: 3 },
+  featureText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  dotsRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 20 },
+  dot: { height: 9, borderRadius: 4.5 },
+  btnsRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 32, gap: 16 },
   skipBtn: { paddingHorizontal: 16, paddingVertical: 14 },
-  skipText: { color: "rgba(255,255,255,0.45)", fontSize: 14, fontFamily: "Inter_500Medium" },
+  skipText: { color: "rgba(255,255,255,0.35)", fontSize: 15, fontFamily: "Inter_600SemiBold" },
   nextBtn: {
     flex: 1, alignItems: "center", justifyContent: "center",
-    paddingVertical: 15, borderRadius: 16,
+    paddingVertical: 18, borderRadius: 20,
   },
   getStartedBtn: { flex: 1 },
-  nextBtnText: { color: "#1A0E08", fontSize: 16, fontFamily: "Inter_700Bold" },
+  nextBtnText: { color: "#000000", fontSize: 17, fontFamily: "Inter_700Bold" },
 });

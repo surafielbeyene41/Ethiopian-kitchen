@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -10,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -49,81 +51,70 @@ const MEAL_TIME_COLORS: Record<string, string> = {
 function ExerciseCard({ exercise, theme, onLog, justLogged }: {
   exercise: typeof EXERCISES[0]; theme: any; onLog: () => void; justLogged: boolean;
 }) {
-  const catColor = CATEGORY_COLORS[exercise.category] ?? theme.tint;
-  const levelColors: Record<string, string> = { beginner: "#2E7D32", intermediate: "#E65100", advanced: "#C62828" };
+  const catColor = "#FFC107";
+  const levelColors: Record<string, string> = { beginner: "#4CAF50", intermediate: "#FF9800", advanced: "#F44336" };
 
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/exercise/[id]", params: { id: exercise.id } })}
       style={({ pressed }) => [
         styles.exCard,
-        { backgroundColor: theme.card, borderColor: theme.cardBorder, opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] },
+        { opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] },
       ]}
     >
-      <View style={[styles.exIconBox, { backgroundColor: catColor + "18" }]}>
-        <Feather name={exercise.icon as any} size={22} color={catColor} />
-      </View>
-
-      <View style={{ flex: 1, gap: 4 }}>
-        <View style={styles.exNameRow}>
-          <View style={{ flex: 1 }}>
-            {exercise.amharic && <Text style={[styles.exAmharic, { color: catColor }]}>{exercise.amharic}</Text>}
-            <Text style={[styles.exName, { color: theme.text }]} numberOfLines={1}>{exercise.name}</Text>
-          </View>
-          <View style={[styles.levelBadge, { backgroundColor: levelColors[exercise.level] + "22" }]}>
-            <Text style={[styles.levelText, { color: levelColors[exercise.level] }]}>{exercise.level}</Text>
-          </View>
+      <BlurView intensity={10} tint="light" style={styles.exCardBlur}>
+        <View style={[styles.exIconBox, { backgroundColor: "rgba(255,193,7,0.1)" }]}>
+          <Feather name={exercise.icon as any} size={24} color="#FFC107" />
         </View>
 
-        <Text style={[styles.exDesc, { color: theme.subtitle }]} numberOfLines={2}>{exercise.description}</Text>
+        <View style={{ flex: 1, gap: 6 }}>
+          <View style={styles.exNameRow}>
+            <View style={{ flex: 1 }}>
+              {exercise.amharic && <Text style={styles.exAmharic}>{exercise.amharic}</Text>}
+              <Text style={styles.exName} numberOfLines={1}>{exercise.name}</Text>
+            </View>
+            <View style={[styles.levelBadge, { backgroundColor: levelColors[exercise.level] + "20" }]}>
+              <Text style={[styles.levelText, { color: levelColors[exercise.level] }]}>{exercise.level}</Text>
+            </View>
+          </View>
 
-        <View style={styles.exStats}>
-          <View style={styles.exStat}>
-            <Feather name="clock" size={11} color={theme.muted} />
-            <Text style={[styles.exStatText, { color: theme.muted }]}>{exercise.duration} min</Text>
-          </View>
-          <View style={styles.exStat}>
-            <Feather name="zap" size={11} color={theme.muted} />
-            <Text style={[styles.exStatText, { color: theme.muted }]}>{exercise.calories} kcal</Text>
-          </View>
-          {exercise.sets && (
+          <Text style={styles.exDesc} numberOfLines={2}>{exercise.description}</Text>
+
+          <View style={styles.exStats}>
             <View style={styles.exStat}>
-              <Feather name="repeat" size={11} color={theme.muted} />
-              <Text style={[styles.exStatText, { color: theme.muted }]}>{exercise.sets}×{exercise.reps}</Text>
+              <Feather name="clock" size={12} color="rgba(255,255,255,0.4)" />
+              <Text style={styles.exStatText}>{exercise.duration} min</Text>
             </View>
-          )}
-          <View style={styles.exStat}>
-            <Feather name="package" size={11} color={theme.muted} />
-            <Text style={[styles.exStatText, { color: theme.muted }]}>{exercise.equipment}</Text>
+            <View style={styles.exStat}>
+              <Feather name="zap" size={12} color="#FFC107" />
+              <Text style={styles.exStatText}>{exercise.calories} kcal</Text>
+            </View>
+            {exercise.sets && (
+              <View style={styles.exStat}>
+                <Feather name="repeat" size={12} color="rgba(255,255,255,0.4)" />
+                <Text style={styles.exStatText}>{exercise.sets}×{exercise.reps}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.exMuscleRow}>
+            {exercise.muscles.slice(0, 3).map((m) => (
+              <View key={m} style={styles.muscleChip}>
+                <Text style={styles.muscleChipText}>{m}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
-        <View style={styles.exMuscleRow}>
-          {exercise.muscles.slice(0, 3).map((m) => (
-            <View key={m} style={[styles.muscleChip, { backgroundColor: catColor + "15" }]}>
-              <Text style={[styles.muscleChipText, { color: catColor }]}>{m}</Text>
-            </View>
-          ))}
-          {exercise.muscles.length > 3 && (
-            <Text style={[styles.muscleMore, { color: theme.muted }]}>+{exercise.muscles.length - 3}</Text>
-          )}
+        <View style={styles.exActions}>
+          <Pressable
+            onPress={(e) => { e.stopPropagation(); onLog(); }}
+            style={[styles.logBtn, { backgroundColor: justLogged ? "#4CAF50" : "#FFC107" }]}
+          >
+            <Feather name={justLogged ? "check" : "plus"} size={18} color="#000" />
+          </Pressable>
         </View>
-      </View>
-
-      <View style={styles.exActions}>
-        <Pressable
-          onPress={(e) => { e.stopPropagation(); onLog(); }}
-          style={[styles.logBtn, { backgroundColor: justLogged ? "#2E7D32" : catColor }]}
-        >
-          <Feather name={justLogged ? "check" : "plus"} size={16} color="#fff" />
-        </Pressable>
-        <Pressable
-          onPress={() => router.push({ pathname: "/exercise/[id]", params: { id: exercise.id } })}
-          style={[styles.detailBtn, { borderColor: theme.divider }]}
-        >
-          <Feather name="chevron-right" size={16} color={theme.muted} />
-        </Pressable>
-      </View>
+      </BlurView>
     </Pressable>
   );
 }
@@ -369,73 +360,72 @@ export default function FitnessScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 10, gap: 10 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  headerSub: { fontSize: 11, fontFamily: "Inter_500Medium", letterSpacing: 1.2, textTransform: "uppercase" },
-  headerTitle: { fontSize: 32, fontFamily: "Inter_700Bold", marginTop: 2 },
-  headerStats: { flexDirection: "row", gap: 6, marginTop: 4 },
-  statPill: { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 10, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 },
-  statPillText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  tabSeg: { flexDirection: "row", borderRadius: 13, borderWidth: 1, overflow: "hidden", padding: 3 },
-  tabSegBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 10 },
-  tabSegText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  searchBar: { flexDirection: "row", alignItems: "center", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, gap: 8 },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular" },
-  pillsRow: { gap: 7 },
-  pill: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
-  pillText: { fontSize: 12, fontFamily: "Inter_500Medium" },
-  pillCount: { borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
-  pillCountText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
-  list: { paddingHorizontal: 20, paddingTop: 8, gap: 0 },
-  summaryBanner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 14, borderWidth: 1, padding: 14, marginBottom: 12 },
-  summaryTitle: { fontSize: 15, fontFamily: "Inter_700Bold" },
-  summarySubtitle: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
-  summaryRight: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
-  summaryTipText: { fontSize: 12, fontFamily: "Inter_500Medium" },
-  exCard: { flexDirection: "row", alignItems: "flex-start", gap: 12, borderRadius: 16, borderWidth: 1, padding: 14 },
-  exIconBox: { width: 48, height: 48, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  exNameRow: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
-  exAmharic: { fontSize: 11, fontFamily: "Inter_500Medium", marginBottom: 1 },
-  exName: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
-  levelBadge: { borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3, flexShrink: 0 },
-  levelText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
-  exDesc: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17 },
-  exStats: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
-  exStat: { flexDirection: "row", alignItems: "center", gap: 3 },
-  exStatText: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  exMuscleRow: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
-  muscleChip: { borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 },
-  muscleChipText: { fontSize: 10, fontFamily: "Inter_500Medium" },
-  muscleMore: { fontSize: 11, fontFamily: "Inter_400Regular", paddingTop: 2 },
-  exActions: { gap: 6, alignItems: "center", flexShrink: 0 },
-  logBtn: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  detailBtn: { width: 32, height: 32, borderRadius: 9, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  mealCard: { borderRadius: 16, borderWidth: 1, overflow: "hidden" },
-  mealTop: { flexDirection: "row", gap: 12, padding: 16, paddingBottom: 0 },
+  container: { flex: 1, backgroundColor: "#0E0804" },
+  header: { paddingHorizontal: 20, paddingBottom: 16, gap: 16 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  headerSub: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFC107", letterSpacing: 1 },
+  headerTitle: { fontSize: 34, fontFamily: "Inter_700Bold", color: "#FFFFFF", marginTop: 2 },
+  headerStats: { flexDirection: "row", gap: 10 },
+  statPill: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  statPillText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  tabSeg: { flexDirection: "row", borderRadius: 16, overflow: "hidden", padding: 4, backgroundColor: "rgba(255,255,255,0.03)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  tabSegBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, borderRadius: 12 },
+  tabSegText: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  searchBar: { flexDirection: "row", alignItems: "center", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, gap: 10, backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" },
+  searchInput: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular" },
+  pillsRow: { gap: 10 },
+  pill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 24, borderWidth: 1 },
+  pillText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  pillCount: { borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
+  pillCountText: { fontSize: 11, fontFamily: "Inter_700Bold" },
+  list: { paddingHorizontal: 20, paddingTop: 12 },
+  summaryBanner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 24, overflow: "hidden", borderWidth: 1, padding: 18, marginBottom: 16, backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  summaryTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+  summarySubtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2, color: "rgba(255,255,255,0.4)" },
+  summaryRight: { flexDirection: "row", alignItems: "center", gap: 8, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  summaryTipText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  exCard: { borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  exCardBlur: { flexDirection: "row", alignItems: "flex-start", gap: 16, padding: 18 },
+  exIconBox: { width: 56, height: 56, borderRadius: 16, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  exNameRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  exAmharic: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFC107" },
+  exName: { fontSize: 18, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+  levelBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, flexShrink: 0 },
+  levelText: { fontSize: 11, fontFamily: "Inter_700Bold" },
+  exDesc: { fontSize: 14, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.6)", lineHeight: 20 },
+  exStats: { flexDirection: "row", gap: 14, flexWrap: "wrap", marginTop: 2 },
+  exStat: { flexDirection: "row", alignItems: "center", gap: 6 },
+  exStatText: { fontSize: 13, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)" },
+  exMuscleRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
+  muscleChip: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: "rgba(255,255,255,0.05)" },
+  muscleChipText: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.5)" },
+  exActions: { alignItems: "center", flexShrink: 0 },
+  logBtn: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  mealCard: { borderRadius: 24, borderWidth: 1, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  mealTop: { flexDirection: "row", gap: 16, padding: 20, paddingBottom: 0 },
   mealTagRow: { flexDirection: "row", marginBottom: 6 },
-  mealGoalTag: { borderRadius: 7, paddingHorizontal: 9, paddingVertical: 4 },
-  mealGoalText: { color: "#fff", fontSize: 11, fontFamily: "Inter_700Bold" },
-  mealName: { fontSize: 17, fontFamily: "Inter_700Bold" },
-  mealDesc: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18, marginTop: 4 },
+  mealGoalTag: { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  mealGoalText: { color: "#FFF", fontSize: 11, fontFamily: "Inter_700Bold" },
+  mealName: { fontSize: 20, fontFamily: "Inter_700Bold", marginTop: 8 },
+  mealDesc: { fontSize: 14, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.6)", lineHeight: 22, marginTop: 6 },
   mealKcalBlock: { alignItems: "flex-end" },
-  mealKcalNum: { fontSize: 26, fontFamily: "Inter_700Bold" },
-  mealKcalUnit: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  mealMacroRow: { flexDirection: "row", borderTopWidth: 1, marginTop: 14 },
-  mealMacroItem: { flex: 1, alignItems: "center", paddingVertical: 10 },
-  mealMacroVal: { fontSize: 15, fontFamily: "Inter_700Bold" },
-  mealMacroLabel: { fontSize: 10, fontFamily: "Inter_400Regular", marginTop: 1 },
-  mealBreakdown: { borderTopWidth: 1, paddingHorizontal: 16 },
-  mealRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 10, borderBottomWidth: 1 },
-  mealTimeBadge: { borderRadius: 7, paddingHorizontal: 8, paddingVertical: 4, alignSelf: "flex-start", minWidth: 76 },
-  mealTimeText: { fontSize: 10, fontFamily: "Inter_700Bold", textAlign: "center" },
-  mealDish: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18 },
-  mealNutRow: { flexDirection: "row", gap: 8, marginTop: 3 },
-  mealNut: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  mealKcal: { fontSize: 14, fontFamily: "Inter_700Bold", flexShrink: 0 },
-  expandRow: { flexDirection: "row", alignItems: "center", gap: 6, justifyContent: "center", padding: 12 },
-  expandText: { fontSize: 12, fontFamily: "Inter_500Medium" },
-  emptyBox: { alignItems: "center", paddingTop: 60, gap: 10 },
-  emptyText: { fontSize: 15, fontFamily: "Inter_400Regular" },
-  clearText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  mealKcalNum: { fontSize: 32, fontFamily: "Inter_700Bold" },
+  mealKcalUnit: { fontSize: 12, fontFamily: "Inter_500Medium" },
+  mealMacroRow: { flexDirection: "row", borderTopWidth: 1, marginTop: 20, borderTopColor: "rgba(255,255,255,0.05)" },
+  mealMacroItem: { flex: 1, alignItems: "center", paddingVertical: 14 },
+  mealMacroVal: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  mealMacroLabel: { fontSize: 11, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)" },
+  mealBreakdown: { borderTopWidth: 1, paddingHorizontal: 20, borderTopColor: "rgba(255,255,255,0.05)" },
+  mealRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.05)" },
+  mealTimeBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start", minWidth: 84 },
+  mealTimeText: { fontSize: 11, fontFamily: "Inter_700Bold", textAlign: "center" },
+  mealDish: { fontSize: 14, fontFamily: "Inter_400Regular", color: "#FFFFFF", lineHeight: 20 },
+  mealNutRow: { flexDirection: "row", gap: 10, marginTop: 4 },
+  mealNut: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  mealKcal: { fontSize: 16, fontFamily: "Inter_700Bold", color: "#FFC107" },
+  expandRow: { flexDirection: "row", alignItems: "center", gap: 8, justifyContent: "center", padding: 14 },
+  expandText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.4)" },
+  emptyBox: { alignItems: "center", paddingVertical: 80, gap: 12 },
+  emptyText: { fontSize: 18, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.3)" },
+  clearText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#FFC107" },
 });

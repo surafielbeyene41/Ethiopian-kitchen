@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,6 +11,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -71,34 +73,38 @@ export default function SavedScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12, backgroundColor: theme.background }]}>
+      <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 16 }]}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={[styles.headerSub, { color: theme.subtitle }]}>Your Collection</Text>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>Saved</Text>
+            <Text style={styles.headerSub}>YOUR COLLECTION</Text>
+            <Text style={styles.headerTitle}>Saved Recipes</Text>
           </View>
           <View style={styles.headerActions}>
             <Pressable
               onPress={() => setViewMode(viewMode === "list" ? "grid" : "list")}
-              style={[styles.iconBtn, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
+              style={styles.iconBtn}
             >
-              <Feather name={viewMode === "list" ? "grid" : "list"} size={16} color={theme.subtitle} />
+              <BlurView intensity={20} tint="light" style={styles.iconBtnBlur}>
+                <Feather name={viewMode === "list" ? "grid" : "list"} size={18} color="#FFC107" />
+              </BlurView>
             </Pressable>
           </View>
         </View>
 
-        <View style={[styles.statsBanner, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-          {[
-            { label: "Saved", value: String(sorted.length), icon: "bookmark", color: theme.tint },
-            { label: "Avg Time", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.time, 0) / sorted.length)} min`, icon: "clock", color: "#1565C0" },
-            { label: "Avg Kcal", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.calories, 0) / sorted.length)}`, icon: "zap", color: "#E65100" },
-          ].map((s, i) => (
-            <View key={s.label} style={[styles.statItem, i < 2 && { borderRightWidth: 1, borderRightColor: theme.divider }]}>
-              <Feather name={s.icon as any} size={13} color={s.color} />
-              <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
-              <Text style={[styles.statLabel, { color: theme.muted }]}>{s.label}</Text>
-            </View>
-          ))}
+        <View style={styles.statsBanner}>
+          <BlurView intensity={10} tint="light" style={styles.statsBannerBlur}>
+            {[
+              { label: "Saved", value: String(sorted.length), icon: "bookmark", color: "#FFC107" },
+              { label: "Avg Time", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.time, 0) / sorted.length)}m`, icon: "clock", color: "#FFC107" },
+              { label: "Avg Kcal", value: `${Math.round(sorted.reduce((s, r) => s + r.recipe.calories, 0) / sorted.length)}`, icon: "zap", color: "#FFC107" },
+            ].map((s, i) => (
+              <View key={s.label} style={[styles.statItem, i < 2 && { borderRightWidth: 1, borderRightColor: "rgba(255,193,7,0.1)" }]}>
+                <Feather name={s.icon as any} size={14} color={s.color} />
+                <Text style={styles.statValue}>{s.value}</Text>
+                <Text style={styles.statLabel}>{s.label}</Text>
+              </View>
+            ))}
+          </BlurView>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortRow}>
@@ -108,10 +114,13 @@ export default function SavedScreen() {
               onPress={() => setSortId(opt.id)}
               style={[
                 styles.sortPill,
-                { backgroundColor: sortId === opt.id ? theme.tint : theme.card, borderColor: sortId === opt.id ? theme.tint : theme.divider },
+                {
+                  backgroundColor: sortId === opt.id ? "#FFC107" : "rgba(255,255,255,0.05)",
+                  borderColor: sortId === opt.id ? "#FFC107" : "rgba(255,255,255,0.08)",
+                },
               ]}
             >
-              <Text style={[styles.sortPillText, { color: sortId === opt.id ? "#fff" : theme.subtitle }]}>{opt.label}</Text>
+              <Text style={[styles.sortPillText, { color: sortId === opt.id ? "#000" : "rgba(255,255,255,0.5)" }]}>{opt.label}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -222,48 +231,50 @@ export default function SavedScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 10, gap: 12 },
-  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  headerSub: { fontSize: 11, fontFamily: "Inter_500Medium", letterSpacing: 1.2, textTransform: "uppercase" },
-  headerTitle: { fontSize: 32, fontFamily: "Inter_700Bold", marginTop: 2 },
-  headerActions: { flexDirection: "row", gap: 8, marginTop: 4 },
-  iconBtn: { width: 38, height: 38, borderRadius: 10, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  statsBanner: { flexDirection: "row", borderRadius: 14, borderWidth: 1, overflow: "hidden" },
-  statItem: { flex: 1, alignItems: "center", paddingVertical: 12, gap: 2 },
-  statValue: { fontSize: 16, fontFamily: "Inter_700Bold" },
-  statLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
-  sortRow: { gap: 8 },
-  sortPill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
-  sortPillText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  container: { flex: 1, backgroundColor: "#0E0804" },
+  header: { paddingHorizontal: 20, paddingBottom: 16, gap: 16 },
+  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerSub: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFC107", letterSpacing: 1 },
+  headerTitle: { fontSize: 34, fontFamily: "Inter_700Bold", color: "#FFFFFF", marginTop: 2 },
+  headerActions: { flexDirection: "row", gap: 10 },
+  iconBtn: { width: 44, height: 44, borderRadius: 14, overflow: "hidden" },
+  iconBtnBlur: { flex: 1, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  statsBanner: { borderRadius: 20, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+  statsBannerBlur: { flexDirection: "row", paddingVertical: 14 },
+  statItem: { flex: 1, alignItems: "center", gap: 4 },
+  statValue: { fontSize: 18, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+  statLabel: { fontSize: 11, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)" },
+  sortRow: { gap: 10, paddingRight: 20 },
+  sortPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 24, borderWidth: 1 },
+  sortPillText: { fontSize: 13, fontFamily: "Inter_700Bold" },
   list: { paddingHorizontal: 20, paddingTop: 4 },
-  listCard: { borderRadius: 18, borderWidth: 1, overflow: "hidden" },
-  listImage: { width: "100%", height: 130 },
+  listCard: { borderRadius: 24, borderWidth: 1, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  listImage: { width: "100%", height: 160 },
   listColorBar: { height: 4 },
-  listBody: { padding: 14, gap: 6 },
-  listTopRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  listAmharic: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  listName: { fontSize: 19, fontFamily: "Inter_700Bold" },
-  listDesc: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18 },
-  listMetaRow: { flexDirection: "row", gap: 12, flexWrap: "wrap" },
-  listMetaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  listMetaText: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  unsaveBtn: { borderRadius: 8, padding: 7, flexShrink: 0 },
-  tag: { borderRadius: 7, paddingHorizontal: 9, paddingVertical: 4, marginRight: 6 },
-  tagText: { fontSize: 11, fontFamily: "Inter_500Medium" },
-  gridCard: { borderRadius: 14, borderWidth: 1, overflow: "hidden" },
-  gridImage: { width: "100%", height: 100 },
-  gridColorBar: { height: 3 },
-  gridBody: { padding: 10, gap: 2 },
-  gridAmharic: { fontSize: 10, fontFamily: "Inter_500Medium" },
-  gridName: { fontSize: 14, fontFamily: "Inter_700Bold" },
-  gridMeta: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  gridMetaText: { fontSize: 10, fontFamily: "Inter_400Regular" },
-  gridUnsave: { position: "absolute", top: 6, right: 6, backgroundColor: "rgba(0,0,0,0.3)", borderRadius: 6, padding: 4 },
-  emptyState: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40, gap: 12, marginTop: -60 },
-  emptyIconBox: { width: 90, height: 90, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 4 },
-  emptyTitle: { fontSize: 22, fontFamily: "Inter_700Bold" },
-  emptySub: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", lineHeight: 22 },
-  exploreBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, paddingVertical: 13, borderRadius: 14, marginTop: 8 },
-  exploreBtnText: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  listBody: { padding: 18, gap: 10 },
+  listTopRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  listAmharic: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  listName: { fontSize: 24, fontFamily: "Inter_700Bold" },
+  listDesc: { fontSize: 14, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.6)", lineHeight: 22 },
+  listMetaRow: { flexDirection: "row", gap: 16, flexWrap: "wrap", marginTop: 4 },
+  listMetaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  listMetaText: { fontSize: 13, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)" },
+  unsaveBtn: { borderRadius: 12, padding: 10, flexShrink: 0 },
+  tag: { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginRight: 8 },
+  tagText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+  gridCard: { borderRadius: 20, borderWidth: 1, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  gridImage: { width: "100%", height: 120 },
+  gridColorBar: { height: 4 },
+  gridBody: { padding: 14, gap: 4 },
+  gridAmharic: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+  gridName: { fontSize: 16, fontFamily: "Inter_700Bold" },
+  gridMeta: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+  gridMetaText: { fontSize: 12, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)" },
+  gridUnsave: { position: "absolute", top: 8, right: 8, backgroundColor: "rgba(0,0,0,0.4)", borderRadius: 10, padding: 6 },
+  emptyState: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40, gap: 16, marginTop: -60 },
+  emptyIconBox: { width: 100, height: 100, borderRadius: 28, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 8, backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" },
+  emptyTitle: { fontSize: 26, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+  emptySub: { fontSize: 15, fontFamily: "Inter_400Regular", textAlign: "center", lineHeight: 24, color: "rgba(255,255,255,0.5)" },
+  exploreBtn: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 18, marginTop: 12, backgroundColor: "#FFC107" },
+  exploreBtnText: { color: "#000000", fontFamily: "Inter_700Bold", fontSize: 16 },
 });
