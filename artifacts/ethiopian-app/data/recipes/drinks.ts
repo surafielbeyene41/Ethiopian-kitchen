@@ -5,7 +5,7 @@ export const DRINK_RECIPES: Recipe[] = [
     id: "ethiopian-coffee",
     name: "Ethiopian Coffee (Bunna)",
     amharic: "ቡና",
-    imageUri: require("../../assets/images/coffee.png"),
+    imageUri: require("../../assets/images/icon.png"),
     category: "drinks",
     difficulty: "medium",
     time: 45,

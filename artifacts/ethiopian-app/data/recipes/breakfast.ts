@@ -5,7 +5,7 @@ export const BREAKFAST_RECIPES: Recipe[] = [
     id: "chechebsa",
     name: "Chechebsa (Kita Firfir)",
     amharic: "ጨጨብሳ",
-    imageUri: require("../../assets/images/chechebsa.png"),
+    imageUri: require("../../assets/images/injera.png"),
     category: "snacks-breakfast",
     difficulty: "medium",
     time: 30,
