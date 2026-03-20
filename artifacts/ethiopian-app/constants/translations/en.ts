@@ -27,6 +27,7 @@ export const en = {
   latest: "Latest Recipes",
   no_recipes: "No recipes found",
   clear_filters: "Clear all filters",
+  results_count: "{count} {dishes} found{plural}",
   dishes: "dishes",
   calories: "Calories",
   kcal: "kcal",
@@ -139,6 +140,8 @@ export const en = {
   feat_steps: "Step counter",
   feat_bmi: "BMI calculator",
   feat_charts: "Weekly charts",
+  imperial_note: "Note: Conversion to cups and ounces is approximate for traditional Ethiopian staples.",
+  instructions: "Instructions",
 
   // Cooking Mode
   step_of: "Step {current} of {total}",

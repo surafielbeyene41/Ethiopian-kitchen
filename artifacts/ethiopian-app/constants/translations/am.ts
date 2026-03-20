@@ -27,6 +27,7 @@ export const am = {
   latest: "አዳዲስ ምግቦች",
   no_recipes: "ምንም ምግብ አልተገኘም",
   clear_filters: "ሁሉንም አፅዳ",
+  results_count: "{count} {dishes} ተገኝተዋል{plural}",
   dishes: "ምግቦች",
   calories: "ካሎሪ",
   kcal: "ካሎሪ",
@@ -139,6 +140,8 @@ export const am = {
   feat_steps: "የእርምጃ ቆጣሪ",
   feat_bmi: "የቢኤምአይ ማስያ",
   feat_charts: "ሳምንታዊ ገበታዎች",
+  imperial_note: "ማሳሰቢያ: ወደ ኩባያ እና አውንስ የሚደረገው መቀየር ለባህላዊ የኢትዮጵያ ምግቦች ግምታዊ ነው።",
+  instructions: "የአዘገጃጀት መመሪያ",
 
   // Cooking Mode
   step_of: "ደረጃ {current} ከ {total}",

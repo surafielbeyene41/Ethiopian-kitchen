@@ -20,6 +20,11 @@ import { useApp } from "@/context/AppContext";
 import { CATEGORIES, RECIPES, Recipe } from "@/data/recipes";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
+const HERO_IMAGE = require("../../assets/images/hero/beyaynetu-platter.png");
+const PATTERN_BG = require("../../assets/images/textures/tibeb-pattern.png");
+const SPICE_MOOD = require("../../assets/images/moods/berbere-spice.png");
+const COFFEE_MOOD = require("../../assets/images/moods/coffee-beans.png");
+const INJERA_MOOD = require("../../assets/images/moods/injera-rolls.png");
 
 function DifficultyBadge({ level }: { level: string }) {
   const cfg: Record<string, { color: string; label: string }> = {
@@ -46,7 +51,7 @@ function FeaturedCard({ recipe }: { recipe: Recipe }) {
       onPress={() => router.push({ pathname: "/recipe/[id]", params: { id: recipe.id } })}
       style={({ pressed }) => [styles.featuredCard, { opacity: pressed ? 0.95 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
     >
-      <Image source={recipe.imageUri} style={styles.featuredImage} resizeMode="cover" />
+      <Image source={HERO_IMAGE} style={styles.featuredImage} resizeMode="cover" />
       <View style={styles.featuredOverlay} />
 
       <View style={styles.featuredContent}>
@@ -177,6 +182,7 @@ export default function RecipesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Image source={PATTERN_BG} style={styles.bgPattern} resizeMode="repeat" />
       <View style={styles.headerWrapper}>
         <BlurView intensity={Platform.OS === 'ios' ? 80 : 100} tint="dark" style={[styles.header, { paddingTop: isWeb ? 60 : insets.top + 12 }]}>
           <View style={styles.headerTop}>
@@ -213,19 +219,31 @@ export default function RecipesScreen() {
 
           <View style={styles.filterRow}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsRow}>
-              {CATEGORIES.map((cat) => (
-                <Pressable
-                  key={cat.id}
-                  onPress={() => setSelectedCategory(cat.id)}
-                  style={[
-                    styles.pill,
-                    selectedCategory === cat.id ? { backgroundColor: "#FFC107", borderColor: "#FFC107" } : { backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.1)" },
-                  ]}
-                >
-                  <Feather name={cat.icon as any} size={14} color={selectedCategory === cat.id ? "#000" : "rgba(255,255,255,0.7)"} />
-                  <Text style={[styles.pillText, { color: selectedCategory === cat.id ? "#000" : "rgba(255,255,255,0.7)" }]}>{t(cat.label as any)}</Text>
-                </Pressable>
-              ))}
+              {CATEGORIES.map((cat) => {
+                const MOODS: Record<string, any> = {
+                  "stews-wots": SPICE_MOOD,
+                  "drinks": COFFEE_MOOD,
+                  "cheese-breads": INJERA_MOOD,
+                };
+                const moodImg = MOODS[cat.id];
+                const isActive = selectedCategory === cat.id;
+                
+                return (
+                  <Pressable
+                    key={cat.id}
+                    onPress={() => setSelectedCategory(cat.id)}
+                    style={[
+                      styles.pill,
+                      { backgroundColor: isActive ? "#FFC107" : "rgba(255,255,255,0.06)", borderColor: isActive ? "#FFC107" : "rgba(255,255,255,0.1)" },
+                    ]}
+                  >
+                    {moodImg && <Image source={moodImg} style={styles.pillMood} resizeMode="cover" />}
+                    <View style={[styles.pillOverlay, { backgroundColor: isActive ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.4)' }]} />
+                    <Feather name={cat.icon as any} size={14} color={isActive ? "#000" : "rgba(255,255,255,0.7)"} style={{ zIndex: 1, marginRight: 6 }} />
+                    <Text style={[styles.pillText, { color: isActive ? "#000" : "rgba(255,255,255,0.7)", zIndex: 1 }]}>{t(cat.label as any)}</Text>
+                  </Pressable>
+                );
+              })}
             </ScrollView>
           </View>
         </BlurView>
@@ -247,7 +265,7 @@ export default function RecipesScreen() {
             </View>
           ) : (
             <View style={styles.resultsLabel}>
-              <Text style={[styles.allRecipesCount, { color: theme.muted }]}>{t("results_count", { count: filtered.length, plural: filtered.length !== 1 ? "s" : "" })}</Text>
+              <Text style={[styles.allRecipesCount, { color: theme.muted }]}>{t("results_count", { count: filtered.length, dishes: t("dishes"), plural: filtered.length !== 1 ? "s" : "" })}</Text>
             </View>
           )
         }
@@ -268,7 +286,8 @@ export default function RecipesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0E0804" },
+  container: { flex: 1, backgroundColor: "#0E0804", position: 'relative' },
+  bgPattern: { ...StyleSheet.absoluteFillObject, opacity: 0.05, tintColor: '#fff' },
   headerWrapper: {
     position: 'absolute',
     top: 0,
@@ -287,7 +306,9 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular" },
   filterRow: { flexDirection: "row", alignItems: "center" },
   pillsRow: { gap: 8 },
-  pill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 22, borderWidth: 1 },
+  pill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 22, borderWidth: 1, position: 'relative', overflow: 'hidden' },
+  pillMood: { ...StyleSheet.absoluteFillObject, opacity: 0.6 },
+  pillOverlay: { ...StyleSheet.absoluteFillObject },
   pillText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   sortBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, borderWidth: 1 },
   sortBtnText: { fontSize: 12, fontFamily: "Inter_500Medium" },

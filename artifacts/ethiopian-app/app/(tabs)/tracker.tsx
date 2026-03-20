@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
   Dimensions,
+  Image as RNImage,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,6 +18,11 @@ import { useApp } from "@/context/AppContext";
 import { STEP_GOAL, WATER_GOAL_ML } from "@/data/fitness";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/hooks/useTranslation";
+const HYDRATION_IMG = require("../../assets/images/fitness/hydration.png");
+const STEPS_IMG = require("../../assets/images/fitness/active-morning.png");
+const ENERGY_IMG = require("../../assets/images/fitness/energy-vitality.png");
+const WELLNESS_IMG = require("../../assets/images/fitness/wellness-balance.png");
+const TIBEB_PATTERN = require("../../assets/images/textures/tibeb-pattern.png");
 
 const WATER_QUICK = [150, 200, 350, 500];
 const STEPS_QUICK = [500, 1000, 2500, 5000];
@@ -144,6 +150,7 @@ export default function TrackerScreen() {
       contentContainerStyle={{ paddingBottom: isWeb ? 34 + 84 : insets.bottom + 100 }}
       showsVerticalScrollIndicator={false}
     >
+      <RNImage source={TIBEB_PATTERN} style={styles.bgPattern} resizeMode="repeat" />
       <View style={[styles.header, { paddingTop: isWeb ? 67 : insets.top + 12 }]}>
         <Text style={[styles.headerSub, { color: theme.subtitle }]}>{t("daily_overview")}</Text>
         <Text style={[styles.headerTitle, { color: theme.text }]}>{t("tracker_title")}</Text>
@@ -158,12 +165,14 @@ export default function TrackerScreen() {
 
       <View style={styles.ringsRow}>
         {[
-          { label: "water", value: `${todayWater}ml`, pct: waterPct, color: "#2196F3" },
-          { label: "steps", value: todaySteps.toLocaleString(), pct: stepsPct, color: "#4CAF50" },
-          { label: "burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#FF9800" },
+          { label: "water", value: `${todayWater}ml`, pct: waterPct, color: "#2196F3", img: HYDRATION_IMG },
+          { label: "steps", value: todaySteps.toLocaleString(), pct: stepsPct, color: "#4CAF50", img: STEPS_IMG },
+          { label: "burned", value: `${todayCaloriesBurned}`, pct: calPct, color: "#FF9800", img: ENERGY_IMG },
         ].map((r) => (
           <View key={r.label} style={styles.ringCardWrapper}>
             <View style={[styles.ringCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+             <RNImage source={r.img} style={styles.ringCardBg} resizeMode="cover" />
+              <View style={styles.ringCardOverlay} />
               <SummaryRing pct={r.pct} color={r.color} label={t(r.label as any)} value={r.value} />
               <Text style={[styles.ringCardLabel, { color: theme.muted }]}>{t(r.label as any)}</Text>
             </View>
@@ -184,8 +193,8 @@ export default function TrackerScreen() {
             style={[
               styles.tabBtn,
               {
-                backgroundColor: activeTab === t.id ? "#FFC107" : "rgba(255,255,255,0.05)",
-                borderColor: activeTab === t.id ? "#FFC107" : "rgba(255,255,255,0.08)",
+                backgroundColor: activeTab === tItem.id ? "#FFC107" : "rgba(255,255,255,0.05)",
+                borderColor: activeTab === tItem.id ? "#FFC107" : "rgba(255,255,255,0.08)",
               },
             ]}
           >
@@ -275,7 +284,7 @@ export default function TrackerScreen() {
                 </View>
                 <View>
                   <Text style={[styles.mainStatVal, { color: "#1565C0" }]}>{todayWater} ml</Text>
-                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>{t("results_count", { count: WATER_GOAL_ML, plural: "" })} ml goal · {waterPct}%</Text>
+                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>{WATER_GOAL_ML} ml goal · {waterPct}%</Text>
                 </View>
               </View>
               <ProgressBar value={todayWater} max={WATER_GOAL_ML} color="#1565C0" theme={theme} />
@@ -321,7 +330,7 @@ export default function TrackerScreen() {
                 </View>
                 <View>
                   <Text style={[styles.mainStatVal, { color: "#2E7D32" }]}>{todaySteps.toLocaleString()}</Text>
-                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>{t("results_count", { count: STEP_GOAL, plural: "" })} goal · {stepsPct}%</Text>
+                  <Text style={[styles.mainStatLabel, { color: theme.muted }]}>{STEP_GOAL.toLocaleString()} goal · {stepsPct}%</Text>
                 </View>
               </View>
               <ProgressBar value={todaySteps} max={STEP_GOAL} color="#2E7D32" theme={theme} />
@@ -446,7 +455,8 @@ export default function TrackerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0E0804" },
+  container: { flex: 1, backgroundColor: "#0E0804", position: 'relative' },
+  bgPattern: { ...StyleSheet.absoluteFillObject, opacity: 0.05, tintColor: '#fff' },
   header: { paddingHorizontal: 20, paddingBottom: 16, gap: 4 },
   headerSub: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFC107", letterSpacing: 0.8 },
   headerTitle: { fontSize: 34, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
@@ -460,8 +470,10 @@ const styles = StyleSheet.create({
   ringFront: { position: "absolute", width: 80, height: 80, borderRadius: 40, borderWidth: 9 },
   ringInner: { alignItems: "center" },
   ringPct: { fontSize: 16, fontFamily: "Inter_700Bold" },
-  ringValue: { fontSize: 10, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.4)", textAlign: "center" },
-  ringCardLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", textAlign: "center" },
+  ringValue: { fontSize: 10, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.7)", textAlign: "center" },
+  ringCardLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", textAlign: "center", zIndex: 1 },
+  ringCardBg: { ...StyleSheet.absoluteFillObject, opacity: 0.4 },
+  ringCardOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
   tabsRow: { flexDirection: "row", gap: 8, marginHorizontal: 20, marginBottom: 20 },
   tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
   tabBtnText: { fontSize: 12, fontFamily: "Inter_700Bold" },
